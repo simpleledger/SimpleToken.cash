@@ -49,9 +49,7 @@ class Slp {
 
         let satoshisAfterFee = utxo.satoshis - byteCount
 
-        let encodedScript = BITBOX.Script.encode(initOpReturn)
-
-        transactionBuilder.addOutput(encodedScript, 0);
+        transactionBuilder.addOutput(initOpReturn, 0)
         transactionBuilder.addOutput(targetAddress, satoshisAfterFee)
 
         let redeemScript

@@ -29,15 +29,31 @@ class App extends Component {
     }
   }
 
-  createToken = (name, ticker, urlOrEmail, decimalPlaces, initialQuantity, slpAddress) => {
+  defineToken = () => {
+    this.setState({
+      activeStep: 1
+    })
+  }
+
+  createToken = (name, ticker, urlOrEmail, decimalPlaces, initialQuantity, addressQuantities) => {
     let slp = new Slp();
     slp.buildInitTx(
-      'TEST',
-      'test token',
+      'tick',
+      'tname',
       'bitcoincash.org',
       0,
       10
     )
+
+    this.setState({
+      activeStep: 2
+    })
+  }
+
+  fundToken = () => {
+    this.setState({
+      activeStep: 3
+    })
   }
 
   render() {

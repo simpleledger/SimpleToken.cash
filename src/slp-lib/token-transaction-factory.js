@@ -18,8 +18,41 @@ class SlpTokenTransactionFactory {
             throw "Pushdata too large"
     }
 
+    int2FixedBuffer(amount, byteLength) {
+        let hex = amount.toString(16)
+        const len = hex.length
+        for (let i = 0; i < byteLength*2 - len; i++) {
+            hex = '0' + hex;
+        }
+        
+        let buffer = Buffer.from(hex, 'hex')
+        return buffer
+    }
+
+    encodeScript(script) {
+        const bufferSize = script.reduce((acc, cur) => {
+            if (Array.isArray(cur)) return acc + cur.length
+            else return acc + 1
+        }, 0)
+
+        const buffer = Buffer.allocUnsafe(bufferSize)
+        let offset = 0
+        script.forEach((scriptItem) => {
+            if (Array.isArray(scriptItem)) {
+                scriptItem.forEach((item) => {
+                    buffer.writeUInt8(item, offset)
+                    offset += 1
+                })
+            } else {
+                buffer.writeUInt8(scriptItem, offset)
+                offset += 1
+            }
+        })
+
+        return buffer
+    }
+
     buildInitOpReturn(ticker, name, documentUrl, documentHash, decimals, batonVout, initialQuantity) {
-        // Array to store final script
         let script = []
 
         // OP Return Prefix
@@ -30,7 +63,7 @@ class SlpTokenTransactionFactory {
         script.push(this.getPushDataOpcode(lokadId))
         lokadId.forEach((item) => script.push(item))
 
-        // Token Type
+        // Token Version
         //let tokenVersion = Buffer.from(this.tokenVersion)
         script.push(0x01)
         script.push(0x01)
@@ -79,7 +112,7 @@ class SlpTokenTransactionFactory {
             throw "Decimals property must be in range 0 to 9"
         }
         script.push(0x01)
-        script.push(0x01)
+        script.push(0x00)
 
         // Baton Vout
         if (batonVout == null) {
@@ -92,11 +125,54 @@ class SlpTokenTransactionFactory {
         script.push([0x4c, 0x00])
 
         // Initial Quantity
-        initialQuantity = [0, 0, 0, 1, 0, 0, 0, 0]
+        initialQuantity = [0, 0, 0, 0, 0, 0, 0x03, 0xe8]
         script.push(this.getPushDataOpcode(initialQuantity))
         initialQuantity.forEach((item) => script.push(item))
 
-        return script
+        let encodedScript = this.encodeScript(script)
+        return encodedScript
+    }
+
+    buildTransferOpReturn(outputQtyArray) {
+        let script = []
+
+        // OP Return Prefix
+        script.push(0x6a)
+
+        // Lokad Id
+        let lokadId = Buffer.from(this.lokadId, 'hex')
+        script.push(this.getPushDataOpcode(lokadId))
+        lokadId.forEach((item) => script.push(item))
+
+        // Token Version
+        script.push(0x01)
+        script.push(0x01)
+
+        // Transaction Type
+        let transactionType = Buffer.from('TRAN')
+        script.push(this.getPushDataOpcode(transactionType))
+        transactionType.forEach((item) => script.push(item))
+
+        // Token Id
+        let tokenId = Buffer.from(this.tokenIdHex, 'hex')
+        script.push(this.getPushDataOpcode(tokenId))
+        tokenId.forEach((item) => script.push(item))
+
+        // Output Quantities
+        if (outputQtyArray.length > 19) {
+            throw "Cannot have more than 19 SLP token outputs."
+        }
+        outputQtyArray.forEach((outputQty) => {
+            if (outputQty < 0) {
+                throw "All outputs must be 0 or greater"
+            }
+            let qtyBuffer = this.int2FixedBuffer(outputQty, 8)
+            script.push(this.getPushDataOpcode(qtyBuffer))
+            qtyBuffer.forEach((item) => script.push(item))
+        })
+
+        let encodedScript = this.encodeScript(script)
+        return encodedScript
     }
 }
 
