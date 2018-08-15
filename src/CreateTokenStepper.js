@@ -1,9 +1,9 @@
 import React, { Component } from 'react'
-import PropTypes from 'prop-types';
-import { withStyles } from '@material-ui/core/styles';
-import Stepper from '@material-ui/core/Stepper';
-import Step from '@material-ui/core/Step';
-import StepLabel from '@material-ui/core/StepLabel';
+import PropTypes from 'prop-types'
+import { withStyles } from '@material-ui/core/styles'
+import Stepper from '@material-ui/core/Stepper'
+import Step from '@material-ui/core/Step'
+import StepLabel from '@material-ui/core/StepLabel'
 
 const classStyles = theme => ({
     root: {
@@ -12,7 +12,7 @@ const classStyles = theme => ({
 })
 
 let getSteps = () => {
-    return ['Learn About SimpleToken', 'Define Your Token', 'Pay Tiny Mining Fee']
+    return ['Learn About SimpleToken', 'Define Your Token', 'Pay Tiny Mining Fee', 'Done']
 }
 
 class CreateTokenStepper extends Component {
