@@ -12,7 +12,7 @@ const classStyles = theme => ({
     },
 });
 
-class Intro extends Component {
+class Done extends Component {
   render() {
     const { classes } = this.props
 
@@ -20,19 +20,25 @@ class Intro extends Component {
       <div className={classes.root}>
         <Paper className={classes.root} elevation={1}>
             <Typography variant="headline" component="h3">
-                Simple Ledger Protocol
+                Token Creation Successful
             </Typography>
             <Typography component="p">
-                Mint millions of tokens on the BCH blockchain in under 2 minutes.
-            </Typography>
+                <b>Token ID</b> tokenId <br/>
+                <b>Name</b> {this.props.name} <br/>
+                <b>Ticker</b> {this.props.ticker} <br/>
+                <b>URL</b> {this.props.urlOrEmail} <br/>
+                <b>Decimal Places</b> {this.props.decimalPlaces} <br/>
+                <b>Initial Quantity</b> {this.props.initialQuantity} <br/>
+                <b>Initial Distribution</b> {this.props.slpAddress} <br/>
+            </Typography> <br/>
         </Paper>
       </div>
     );
   }
 }
 
-Intro.propTypes = {
+Done.propTypes = {
   classes: PropTypes.object.isRequired,
 }
 
-export default withStyles(classStyles)(Intro);
+export default withStyles(classStyles)(Done);

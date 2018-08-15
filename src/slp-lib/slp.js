@@ -25,7 +25,7 @@ class Slp {
     }
 
     async sendInitTx(initOpReturn) {
-        // TODO: Check for fee to large or send leftover to target address
+        // TODO: Check for fee too large or send leftover to target address
 
         let mnemonic = ''
         let rootSeed = BITBOX.Mnemonic.toSeed(mnemonic)
