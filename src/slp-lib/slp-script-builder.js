@@ -67,7 +67,7 @@ class SlpScriptBuilder {
         if (this.tokenType !== 0x01) {
             throw Error("Unsupported token type")
         }
-        script.push(this.getPushDataOpcode(this.tokenType))
+        script.push(this.getPushDataOpcode([this.tokenType]))
         script.push(this.tokenType)
 
         // Transaction Type
@@ -115,7 +115,7 @@ class SlpScriptBuilder {
         if (decimals < 0 || decimals > 9) {
             throw Error("Decimals property must be in range 0 to 9")
         } else {
-            script.push(this.getPushDataOpcode(decimals))
+            script.push(this.getPushDataOpcode([decimals]))
             script.push(decimals)
         }
 
@@ -126,7 +126,7 @@ class SlpScriptBuilder {
             if (batonVout <= 1) {
                 throw Error("Baton vout must be 2 or greater")
             }
-            script.push(this.getPushDataOpcode(batonVout))
+            script.push(this.getPushDataOpcode([batonVout]))
             script.push(batonVout)
         }
 
@@ -158,7 +158,7 @@ class SlpScriptBuilder {
         if (this.tokenType !== 0x01) {
             throw Error("Unsupported token type")
         }
-        script.push(this.getPushDataOpcode(this.tokenType))
+        script.push(this.getPushDataOpcode([this.tokenType]))
         script.push(this.tokenType)
 
         // Transaction Type
