@@ -1,4 +1,5 @@
 class SlpUtils {
+
     static getPushDataOpcode(data) {
         let length = data.length
 
@@ -47,4 +48,4 @@ class SlpUtils {
     }
 }
 
-module.exports = SlpUtils
+export default SlpUtils

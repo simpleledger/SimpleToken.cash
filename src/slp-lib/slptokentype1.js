@@ -146,4 +146,4 @@ class SlpTokenType1 {
     }
 }
 
-module.exports = SlpTokenType1
+export default SlpTokenType1

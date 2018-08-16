@@ -1,5 +1,5 @@
 import network from './network'
-import SlpTokenType1 from './slptokentype1'
+import slptokentype1 from './slptokentype1'
 
 let BITBOXCli = require('bitbox-cli/lib/bitbox-cli').default;
 let BITBOX = new BITBOXCli();
@@ -7,7 +7,7 @@ let BITBOX = new BITBOXCli();
 class Slp {
 
     buildGenesisTx(tokenType, ticker, name, urlOrEmail, decimals, initialQuantity, addressQuantities) {
-        this.genesisOpReturn = SlpTokenType1.buildGenesisOpReturn(
+        this.genesisOpReturn = slptokentype1.buildGenesisOpReturn(
             tokenType,
             ticker,
             name,
