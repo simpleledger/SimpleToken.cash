@@ -48,6 +48,7 @@ class App extends Component {
       tokenProps.urlOrEmail,
       tokenProps.decimalPlaces,
       tokenProps.initialQuantity,
+      tokenProps.slpAddress,
     )
 
     this.setState({

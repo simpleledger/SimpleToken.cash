@@ -19,7 +19,7 @@ class SlpScriptBuilder {
     }
 
     int2FixedBuffer(amount, byteLength) {
-        let hex = amount.toString(16)
+        let hex = parseInt(amount).toString(16)
         const len = hex.length
         for (let i = 0; i < byteLength*2 - len; i++) {
             hex = '0' + hex;
@@ -93,7 +93,6 @@ class SlpScriptBuilder {
             name.forEach((item) => script.push(item))
         }
 
-
         // Document URL
         if (documentUrl == null || documentUrl.length == 0) {
             [0x4c, 0x00].forEach((item) => script.push(item))
@@ -132,7 +131,8 @@ class SlpScriptBuilder {
         }
 
         // Initial Quantity
-        initialQuantity = int2FixedBuffer(initialQuantity, 8)
+        // TODO: Modify quantity to account for decimals, or adjust input?
+        initialQuantity = this.int2FixedBuffer(initialQuantity, 8)
         script.push(this.getPushDataOpcode(initialQuantity))
         initialQuantity.forEach((item) => script.push(item))
 
