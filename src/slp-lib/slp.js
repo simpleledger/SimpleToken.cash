@@ -10,7 +10,7 @@ class Slp {
         this.tokenTransactionFactory = new TokenTransactionFactory(1)
     }
 
-    buildInitTx(ticker, name, urlOrEmail, decimals, initialQuantity) {
+    buildInitTx(ticker, name, urlOrEmail, decimals, initialQuantity, addressQuantities) {
         this.initOpReturn = this.tokenTransactionFactory.buildInitOpReturn(
             ticker,
             name,
@@ -21,10 +21,10 @@ class Slp {
             initialQuantity
         )
 
-        this.sendInitTx(this.initOpReturn)
+        this.sendInitTx(this.initOpReturn, addressQuantities)
     }
 
-    async sendInitTx(initOpReturn) {
+    async sendInitTx(initOpReturn, genesisTokenAddress) {
         // TODO: Check for fee too large or send leftover to target address
 
         let mnemonic = ''
@@ -45,11 +45,16 @@ class Slp {
         let transactionBuilder = new BITBOX.TransactionBuilder('bitcoincash')
         transactionBuilder.addInput(utxo.txid, utxo.vout)
 
-        let byteCount = BITBOX.BitcoinCash.getByteCount({ P2PKH: 1 }, { P2PKH: 3 })
+        let byteCount = BITBOX.BitcoinCash.getByteCount({ P2PKH: 1 }, { P2PKH: 4 })
 
-        let satoshisAfterFee = utxo.satoshis - byteCount
+        let satoshisAfterFee = utxo.satoshis - 546- byteCount
 
         transactionBuilder.addOutput(initOpReturn, 0)
+
+        // All tokens with dust BCH output
+        transactionBuilder.addOutput(genesisTokenAddress, 546)
+
+        // Change
         transactionBuilder.addOutput(targetAddress, satoshisAfterFee)
 
         let redeemScript

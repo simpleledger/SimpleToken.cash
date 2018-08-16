@@ -19,7 +19,7 @@ class SlpTokenTransactionFactory {
     }
 
     int2FixedBuffer(amount, byteLength) {
-        let hex = amount.toString(16)
+        let hex = parseInt(amount).toString(16)
         const len = hex.length
         for (let i = 0; i < byteLength*2 - len; i++) {
             hex = '0' + hex;
@@ -75,36 +75,32 @@ class SlpTokenTransactionFactory {
 
         // Ticker
         if (ticker == null || ticker.length == 0) {
-            ticker = 0x00
+            script.push([0x4c, 0x00])
         } else {
             ticker = Buffer.from(ticker)
+            script.push(this.getPushDataOpcode(ticker))
+            ticker.forEach((item) => script.push(item))
         }
-        script.push(this.getPushDataOpcode(ticker))
-        ticker.forEach((item) => script.push(item))
 
         // Name
         if (name == null || name.length == 0) {
-            name = 0x00
+            script.push([0x4c, 0x00])
         } else {
             name = Buffer.from(name)
+            script.push(this.getPushDataOpcode(name))
+            name.forEach((item) => script.push(item))
         }
-        script.push(this.getPushDataOpcode(name))
-        name.forEach((item) => script.push(item))
 
         // Document URL
         if (documentUrl == null || documentUrl.length == 0) {
-            documentUrl = 0x00
+            script.push([0x4c, 0x00])
         } else {
             documentUrl = Buffer.from(documentUrl)
+            script.push(this.getPushDataOpcode(documentUrl))
+            documentUrl.forEach((item) => script.push(item))
         }
-        script.push([0x4c, 0x00])
 
         // Document Hash
-        if (documentHash == null || documentHash.length == 0) {
-            documentHash = 0x00
-        } else {
-            documentHash = Buffer.from(documentHash)
-        }
         script.push([0x4c, 0x00])
 
         // Decimals
@@ -112,20 +108,21 @@ class SlpTokenTransactionFactory {
             throw "Decimals property must be in range 0 to 9"
         }
         script.push(0x01)
-        script.push(0x00)
+        script.push(decimals)
 
         // Baton Vout
         if (batonVout == null) {
-            batonVout = 0x00
+            script.push([0x4c, 0x00])
+        } else if (batonVout <= 1) {
+            throw "Baton vout must be 2 or greater"
         } else {
-            if (batonVout <= 1) {
-                throw "Baton vout must be 2 or greater"
-            }
+            script.push(0x01)
+            script.push(batonVout)
         }
-        script.push([0x4c, 0x00])
 
         // Initial Quantity
-        initialQuantity = [0, 0, 0, 0, 0, 0, 0x03, 0xe8]
+        // TODO: Modify quantity to account for decimals, or adjust input?
+        initialQuantity = this.int2FixedBuffer(initialQuantity, 8)
         script.push(this.getPushDataOpcode(initialQuantity))
         initialQuantity.forEach((item) => script.push(item))
 

@@ -4,8 +4,6 @@ import { withStyles } from '@material-ui/core/styles'
 import Paper from '@material-ui/core/Paper'
 import Typography from '@material-ui/core/Typography'
 import TextField from '@material-ui/core/TextField'
-import FormControlLabel from '@material-ui/core/FormControlLabel'
-import Checkbox from '@material-ui/core/Checkbox'
 import Button from '@material-ui/core/Button'
 
 const classStyles = theme => ({
@@ -38,7 +36,7 @@ class CreateTokenForm extends Component {
             isFixedSupply: true,
         }
     }
-    
+
     handleChange = name => event => {
         this.setState({
             [name]: event.target.value,
@@ -97,30 +95,19 @@ class CreateTokenForm extends Component {
                     /> <br />
                     <TextField
                         id="slpAddress"
-                        label="SLP Address"
+                        label="SLP Address (testing only)"
                         className={classes.textField}
                         margin="normal"
                         value={this.state.slpAddress}
                         onChange={this.handleChange('slpAddress')}
                     /> <br />
-                    <FormControlLabel
-                        control={
-                            <Checkbox
-                                checked={this.state.isFixedSupply}
-                                onChange={this.handleChange('isFixedSupply')}
-                                value="isFixedSupply"
-                                color="primary"
-                            />
-                        }
-                        label="Fixed Supply"
-                    /> <br/>
                     <Button 
                         variant="contained" 
                         color="primary" 
                         className={classes.button}
                         onClick={ () => this.props.createToken(this.state) }
                     >
-                        Create
+                        Create (broadcasts tx)
                     </Button>
                 </form>
             </Paper>
