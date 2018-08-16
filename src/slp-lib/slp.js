@@ -11,7 +11,7 @@ class Slp {
     }
 
     buildGenesisTx(ticker, name, urlOrEmail, decimals, initialQuantity, addressQuantities) {
-        this.initOpReturn = this.tokenTransactionFactory.buildGenesisOpReturn(
+        this.genesisOpReturn = this.slpScriptBuilder.buildGenesisOpReturn(
             ticker,
             name,
             urlOrEmail,
@@ -21,7 +21,7 @@ class Slp {
             initialQuantity
         )
 
-        this.sendGenesisTx(this.initOpReturn, addressQuantities)
+        this.sendGenesisTx(this.genesisOpReturn, addressQuantities)
     }
 
     async sendGenesisTx(initOpReturn, genesisTokenAddress) {
