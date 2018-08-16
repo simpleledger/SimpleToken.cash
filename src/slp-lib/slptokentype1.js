@@ -82,7 +82,7 @@ class SlpTokenType1 {
         }
 
         // Initial Quantity
-        initialQuantity = SlpUtils.int2FixedBuffer(initialQuantity * decimals, 8)
+        initialQuantity = SlpUtils.int2FixedBuffer(initialQuantity * 10**decimals, 8)
         script.push(SlpUtils.getPushDataOpcode(initialQuantity))
         initialQuantity.forEach((item) => script.push(item))
 
@@ -133,7 +133,7 @@ class SlpTokenType1 {
             if (outputQty < 0) {
                 throw Error("All outputs must be 0 or greater")
             }
-            let qtyBuffer = SlpUtils.int2FixedBuffer(outputQty * decimals, 8)
+            let qtyBuffer = SlpUtils.int2FixedBuffer(outputQty * 10**decimals, 8)
             script.push(SlpUtils.getPushDataOpcode(qtyBuffer))
             qtyBuffer.forEach((item) => script.push(item))
         })
