@@ -42,7 +42,7 @@ class App extends Component {
   createToken = (tokenProps) => {
     let slp = new Slp();
     
-    slp.buildInitTx(
+    slp.buildGenesisTx(
       tokenProps.ticker,
       tokenProps.name,
       tokenProps.urlOrEmail,

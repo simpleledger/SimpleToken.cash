@@ -1,4 +1,4 @@
-import TokenTransactionFactory from './token-transaction-factory'
+import SlpScriptBuilder from './slp-script-builder'
 import network from './network'
 
 let BITBOXCli = require('bitbox-cli/lib/bitbox-cli').default;
@@ -7,11 +7,11 @@ let BITBOX = new BITBOXCli();
 class Slp {
     constructor() {
         // Create new token transaction factory for v1 tokens
-        this.tokenTransactionFactory = new TokenTransactionFactory(1)
+        this.slpScriptBuilder = new SlpScriptBuilder(1)
     }
 
-    buildInitTx(ticker, name, urlOrEmail, decimals, initialQuantity) {
-        this.initOpReturn = this.tokenTransactionFactory.buildInitOpReturn(
+    buildGenesisTx(ticker, name, urlOrEmail, decimals, initialQuantity) {
+        this.genesisOpReturn = this.slpScriptBuilder.buildGenesisOpReturn(
             ticker,
             name,
             urlOrEmail,
@@ -21,10 +21,10 @@ class Slp {
             initialQuantity
         )
 
-        this.sendInitTx(this.initOpReturn)
+        this.sendGenesisTx(this.genesisOpReturn)
     }
 
-    async sendInitTx(initOpReturn) {
+    async sendGenesisTx(genesisOpReturn) {
         // TODO: Check for fee too large or send leftover to target address
 
         let mnemonic = ''
@@ -49,7 +49,7 @@ class Slp {
 
         let satoshisAfterFee = utxo.satoshis - byteCount
 
-        transactionBuilder.addOutput(initOpReturn, 0)
+        transactionBuilder.addOutput(genesisOpReturn, 0)
         transactionBuilder.addOutput(targetAddress, satoshisAfterFee)
 
         let redeemScript

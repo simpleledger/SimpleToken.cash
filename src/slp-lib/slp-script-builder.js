@@ -1,8 +1,8 @@
-class SlpTokenTransactionFactory {
-    constructor(tokenVersion, tokenIdHex = null) {
-        this.tokenVersion = tokenVersion
+class SlpScriptBuilder {
+    constructor(tokenType, tokenIdHex = null) {
+        this.tokenType = tokenType
         this.tokenIdHex = tokenIdHex
-        this.lokadId = "00534c50"
+        this.lokadId = "534c5000"
     }
 
     getPushDataOpcode(data) {
@@ -52,7 +52,7 @@ class SlpTokenTransactionFactory {
         return buffer
     }
 
-    buildInitOpReturn(ticker, name, documentUrl, documentHash, decimals, batonVout, initialQuantity) {
+    buildGenesisOpReturn(ticker, name, documentUrl, documentHash, decimals, batonVout, initialQuantity) {
         let script = []
 
         // OP Return Prefix
@@ -63,77 +63,87 @@ class SlpTokenTransactionFactory {
         script.push(this.getPushDataOpcode(lokadId))
         lokadId.forEach((item) => script.push(item))
 
-        // Token Version
-        //let tokenVersion = Buffer.from(this.tokenVersion)
-        script.push(0x01)
-        script.push(0x01)
+        // Token Type
+        if (this.tokenType != 0x01) {
+            throw "Unsupported token type"
+        }
+        script.push(this.getPushDataOpcode(this.tokenType))
+        script.push(this.tokenType)
 
         // Transaction Type
-        let transactionType = Buffer.from('INIT')
+        let transactionType = Buffer.from('GENESIS')
         script.push(this.getPushDataOpcode(transactionType))
         transactionType.forEach((item) => script.push(item))
 
         // Ticker
         if (ticker == null || ticker.length == 0) {
-            ticker = 0x00
+            [0x4c, 0x00].forEach((item) => script.push(item))
         } else {
             ticker = Buffer.from(ticker)
+            script.push(this.getPushDataOpcode(ticker))
+            ticker.forEach((item) => script.push(item))
         }
-        script.push(this.getPushDataOpcode(ticker))
-        ticker.forEach((item) => script.push(item))
 
         // Name
         if (name == null || name.length == 0) {
-            name = 0x00
+            [0x4c, 0x00].forEach((item) => script.push(item))
         } else {
             name = Buffer.from(name)
+            script.push(this.getPushDataOpcode(name))
+            name.forEach((item) => script.push(item))
         }
-        script.push(this.getPushDataOpcode(name))
-        name.forEach((item) => script.push(item))
+
 
         // Document URL
         if (documentUrl == null || documentUrl.length == 0) {
-            documentUrl = 0x00
+            [0x4c, 0x00].forEach((item) => script.push(item))
         } else {
             documentUrl = Buffer.from(documentUrl)
+            script.push(this.getPushDataOpcode(documentUrl))
+            documentUrl.forEach((item) => script.push(item))
         }
-        script.push([0x4c, 0x00])
 
         // Document Hash
         if (documentHash == null || documentHash.length == 0) {
-            documentHash = 0x00
+            [0x4c, 0x00].forEach((item) => script.push(item))
         } else {
             documentHash = Buffer.from(documentHash)
+            script.push(this.getPushDataOpcode(documentHash))
+            documentHash.forEach((item) => script.push(item))
         }
-        script.push([0x4c, 0x00])
 
         // Decimals
         if (decimals < 0 || decimals > 9) {
             throw "Decimals property must be in range 0 to 9"
+        } else {
+            script.push(this.getPushDataOpcode(decimals))
+            script.push(decimals)
         }
-        script.push(0x01)
-        script.push(0x00)
 
         // Baton Vout
         if (batonVout == null) {
-            batonVout = 0x00
+            [0x4c, 0x00].forEach((item) => script.push(item))
         } else {
             if (batonVout <= 1) {
                 throw "Baton vout must be 2 or greater"
             }
+            script.push(this.getPushDataOpcode(batonVout))
+            script.push(batonVout)
         }
-        script.push([0x4c, 0x00])
 
         // Initial Quantity
-        initialQuantity = [0, 0, 0, 0, 0, 0, 0x03, 0xe8]
+        initialQuantity = int2FixedBuffer(initialQuantity, 8)
         script.push(this.getPushDataOpcode(initialQuantity))
         initialQuantity.forEach((item) => script.push(item))
 
         let encodedScript = this.encodeScript(script)
+        if (encodedScript.length > 223) {
+            throw "Script too long, must be less than 223 bytes."
+        }
         return encodedScript
     }
 
-    buildTransferOpReturn(outputQtyArray) {
+    buildSendOpReturn(outputQtyArray) {
         let script = []
 
         // OP Return Prefix
@@ -144,12 +154,15 @@ class SlpTokenTransactionFactory {
         script.push(this.getPushDataOpcode(lokadId))
         lokadId.forEach((item) => script.push(item))
 
-        // Token Version
-        script.push(0x01)
-        script.push(0x01)
+        // Token Type
+        if (this.tokenType != 0x01) {
+            throw "Unsupported token type"
+        }
+        script.push(this.getPushDataOpcode(this.tokenType))
+        script.push(this.tokenType)
 
         // Transaction Type
-        let transactionType = Buffer.from('TRAN')
+        let transactionType = Buffer.from('SEND')
         script.push(this.getPushDataOpcode(transactionType))
         transactionType.forEach((item) => script.push(item))
 
@@ -172,8 +185,11 @@ class SlpTokenTransactionFactory {
         })
 
         let encodedScript = this.encodeScript(script)
+        if (encodedScript.length > 223) {
+            throw "Script too long, must be less than 223 bytes."
+        }
         return encodedScript
     }
 }
 
-module.exports = SlpTokenTransactionFactory
+module.exports = SlpScriptBuilder
