@@ -1,17 +1,14 @@
-import SlpScriptBuilder from './slp-script-builder'
 import network from './network'
+import SlpTokenType1 from './slptokentype1'
 
 let BITBOXCli = require('bitbox-cli/lib/bitbox-cli').default;
 let BITBOX = new BITBOXCli();
 
 class Slp {
-    constructor() {
-        // Create new token transaction factory for v1 tokens
-        this.slpScriptBuilder = new SlpScriptBuilder(1)
-    }
 
-    buildGenesisTx(ticker, name, urlOrEmail, decimals, initialQuantity, addressQuantities) {
-        this.genesisOpReturn = this.slpScriptBuilder.buildGenesisOpReturn(
+    buildGenesisTx(tokenType, ticker, name, urlOrEmail, decimals, initialQuantity, addressQuantities) {
+        this.genesisOpReturn = SlpTokenType1.buildGenesisOpReturn(
+            tokenType,
             ticker,
             name,
             urlOrEmail,
@@ -27,7 +24,7 @@ class Slp {
     async sendGenesisTx(initOpReturn, genesisTokenAddress) {
         // TODO: Check for fee too large or send leftover to target address
 
-        let mnemonic = ''
+        let mnemonic = 'suggest cabin brand grief pulse phone vicious fluid wear mouse taxi random armor million dolphin clump width inherit tattoo ticket reward clean farm stamp'
         let rootSeed = BITBOX.Mnemonic.toSeed(mnemonic)
         let masterHDNode = BITBOX.HDNode.fromSeed(rootSeed, 'bitcoincash')
         let hdNode = BITBOX.HDNode.derivePath(masterHDNode, "m/44'/145'/0'")
