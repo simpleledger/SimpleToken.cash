@@ -8,18 +8,18 @@ class SlpScriptBuilder {
     getPushDataOpcode(data) {
         let length = data.length
 
-        if (length == 0)
+        if (length === 0)
             return [0x4c, 0x00]
         else if (length < 76)
             return length
         else if (length < 256)
             return [0x4c, length]
         else
-            throw "Pushdata too large"
+            throw Error("Pushdata too large")
     }
 
     int2FixedBuffer(amount, byteLength) {
-        let hex = parseInt(amount).toString(16)
+        let hex = parseInt(amount, 10).toString(16)
         const len = hex.length
         for (let i = 0; i < byteLength*2 - len; i++) {
             hex = '0' + hex;
@@ -64,8 +64,8 @@ class SlpScriptBuilder {
         lokadId.forEach((item) => script.push(item))
 
         // Token Type
-        if (this.tokenType != 0x01) {
-            throw "Unsupported token type"
+        if (this.tokenType !== 0x01) {
+            throw Error("Unsupported token type")
         }
         script.push(this.getPushDataOpcode(this.tokenType))
         script.push(this.tokenType)
@@ -76,7 +76,7 @@ class SlpScriptBuilder {
         transactionType.forEach((item) => script.push(item))
 
         // Ticker
-        if (ticker == null || ticker.length == 0) {
+        if (ticker == null || ticker.length === 0) {
             [0x4c, 0x00].forEach((item) => script.push(item))
         } else {
             ticker = Buffer.from(ticker)
@@ -85,7 +85,7 @@ class SlpScriptBuilder {
         }
 
         // Name
-        if (name == null || name.length == 0) {
+        if (name == null || name.length === 0) {
             [0x4c, 0x00].forEach((item) => script.push(item))
         } else {
             name = Buffer.from(name)
@@ -94,7 +94,7 @@ class SlpScriptBuilder {
         }
 
         // Document URL
-        if (documentUrl == null || documentUrl.length == 0) {
+        if (documentUrl == null || documentUrl.length === 0) {
             [0x4c, 0x00].forEach((item) => script.push(item))
         } else {
             documentUrl = Buffer.from(documentUrl)
@@ -103,7 +103,7 @@ class SlpScriptBuilder {
         }
 
         // Document Hash
-        if (documentHash == null || documentHash.length == 0) {
+        if (documentHash == null || documentHash.length === 0) {
             [0x4c, 0x00].forEach((item) => script.push(item))
         } else {
             documentHash = Buffer.from(documentHash)
@@ -113,7 +113,7 @@ class SlpScriptBuilder {
 
         // Decimals
         if (decimals < 0 || decimals > 9) {
-            throw "Decimals property must be in range 0 to 9"
+            throw Error("Decimals property must be in range 0 to 9")
         } else {
             script.push(this.getPushDataOpcode(decimals))
             script.push(decimals)
@@ -124,7 +124,7 @@ class SlpScriptBuilder {
             [0x4c, 0x00].forEach((item) => script.push(item))
         } else {
             if (batonVout <= 1) {
-                throw "Baton vout must be 2 or greater"
+                throw Error("Baton vout must be 2 or greater")
             }
             script.push(this.getPushDataOpcode(batonVout))
             script.push(batonVout)
@@ -138,7 +138,7 @@ class SlpScriptBuilder {
 
         let encodedScript = this.encodeScript(script)
         if (encodedScript.length > 223) {
-            throw "Script too long, must be less than 223 bytes."
+            throw Error("Script too long, must be less than 223 bytes.")
         }
         return encodedScript
     }
@@ -155,8 +155,8 @@ class SlpScriptBuilder {
         lokadId.forEach((item) => script.push(item))
 
         // Token Type
-        if (this.tokenType != 0x01) {
-            throw "Unsupported token type"
+        if (this.tokenType !== 0x01) {
+            throw Error("Unsupported token type")
         }
         script.push(this.getPushDataOpcode(this.tokenType))
         script.push(this.tokenType)
@@ -173,11 +173,11 @@ class SlpScriptBuilder {
 
         // Output Quantities
         if (outputQtyArray.length > 19) {
-            throw "Cannot have more than 19 SLP token outputs."
+            throw Error("Cannot have more than 19 SLP token outputs.")
         }
         outputQtyArray.forEach((outputQty) => {
             if (outputQty < 0) {
-                throw "All outputs must be 0 or greater"
+                throw Error("All outputs must be 0 or greater")
             }
             let qtyBuffer = this.int2FixedBuffer(outputQty, 8)
             script.push(this.getPushDataOpcode(qtyBuffer))
@@ -186,7 +186,7 @@ class SlpScriptBuilder {
 
         let encodedScript = this.encodeScript(script)
         if (encodedScript.length > 223) {
-            throw "Script too long, must be less than 223 bytes."
+            throw Error("Script too long, must be less than 223 bytes.")
         }
         return encodedScript
     }
