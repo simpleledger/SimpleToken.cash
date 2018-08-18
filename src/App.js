@@ -1,6 +1,7 @@
 import React, { Component } from 'react'
 import { MuiThemeProvider, createMuiTheme } from '@material-ui/core/styles'
 import Header from './Header'
+import StepContainer from './StepContainer'
 import Intro from './Intro'
 import CreateToken from './CreateToken'
 import CreateTokenForm from './CreateTokenForm'
@@ -42,14 +43,14 @@ class App extends Component {
   createToken = (tokenProps) => {
     let slp = new Slp();
     
-    slp.buildGenesisTx(
-      tokenProps.ticker,
-      tokenProps.name,
-      tokenProps.urlOrEmail,
-      tokenProps.decimalPlaces,
-      tokenProps.initialQuantity,
-      tokenProps.slpAddress,
-    )
+    // slp.buildGenesisTx(
+    //   tokenProps.ticker,
+    //   tokenProps.name,
+    //   tokenProps.urlOrEmail,
+    //   tokenProps.decimalPlaces,
+    //   tokenProps.initialQuantity,
+    //   tokenProps.slpAddress,
+    // )
 
     this.setState({
       activeStep: 2,
@@ -66,15 +67,30 @@ class App extends Component {
   }
 
   render() {
+    let stepComponent = null
+    switch(this.state.activeStep) {
+      case 0:
+        stepComponent = <CreateToken defineToken={this.defineToken} />
+        break
+      case 1:
+        stepComponent = <CreateTokenForm createToken={this.createToken} />
+        break
+      case 2:
+        stepComponent = <Distribution />
+        break
+      case 3:
+        stepComponent = <Invoice {...this.state.tokenProps} />
+        break
+      case 4:
+        stepComponent = <Done {...this.state.tokenProps} />
+    }
+
     return (
       <MuiThemeProvider theme={theme}>
         <Header />
-        <Intro />
-        <CreateToken defineToken={this.defineToken} />
-        <CreateTokenForm createToken={this.createToken} />
-        <Distribution />
-        <Invoice {...this.state.tokenProps} />
-        <Done {...this.state.tokenProps} />
+        <StepContainer>
+          { stepComponent }
+        </StepContainer>
         <CreateTokenStepper activeStep={this.state.activeStep} />
         <Footer />
       </MuiThemeProvider>
