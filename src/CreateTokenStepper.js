@@ -12,7 +12,7 @@ const classStyles = theme => ({
 })
 
 let getSteps = () => {
-    return ['Learn About SimpleToken', 'Define Your Token', 'Pay Tiny Mining Fee', 'Done']
+    return ['Learn About SimpleToken', 'Define Your Token', 'Distribute Supply', 'Review']
 }
 
 class CreateTokenStepper extends Component {
