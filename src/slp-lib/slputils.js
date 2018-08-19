@@ -1,3 +1,6 @@
+let BITBOXCli = require('bitbox-cli/lib/bitbox-cli').default
+let BITBOX = new BITBOXCli()
+
 class SlpUtils {
 
     static getPushDataOpcode(data) {
@@ -45,6 +48,12 @@ class SlpUtils {
         })
 
         return buffer
+    }
+
+    static txidFromHex(hex) {
+        let buffer = Buffer.from(hex, "hex")
+        let hash = BITBOX.Crypto.hash256(buffer).toString('hex')
+        return hash.match(/[a-fA-F0-9]{2}/g).reverse().join('')
     }
 }
 
