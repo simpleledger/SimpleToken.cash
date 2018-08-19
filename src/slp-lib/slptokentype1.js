@@ -1,7 +1,7 @@
 import SlpUtils from './slputils'
 
 class SlpTokenType1 {
-    lokadIdHex = "534c5000"
+    static get lokadIdHex() { return "534c5000" }
 
     static buildGenesisOpReturn(tokenType, ticker, name, documentUrl, documentHash, decimals, batonVout, initialQuantity) {
         let script = []
@@ -94,7 +94,6 @@ class SlpTokenType1 {
     }
 
     static buildSendOpReturn(tokenType, tokenIdHex, decimals, outputQtyArray) {
-
         let script = []
 
         // OP Return Prefix
