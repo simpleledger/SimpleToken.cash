@@ -1,7 +1,6 @@
 import React, { Component } from 'react'
 import PropTypes from 'prop-types'
 import { withStyles } from '@material-ui/core/styles'
-import Paper from '@material-ui/core/Paper'
 import Typography from '@material-ui/core/Typography'
 import TextField from '@material-ui/core/TextField'
 import FormControlLabel from '@material-ui/core/FormControlLabel'
@@ -21,18 +20,26 @@ class Distribution extends Component {
         super(props)
 
         this.state = {
-            slpAddress: '',
+            isFixedSupply: true,
+            batonAddress: '',
             addressQuantities: [{
                 address: '',
-                quantity: 0,
+                quantity: '',
             }],
-            isFixedSupply: true,
         }
     }
 
     handleChange = name => event => {
         this.setState({
             [name]: event.target.value,
+        })
+    }
+
+    handleDistributionChange = (index, name, newValue) => {
+        const aq = [...this.state.addressQuantities]
+        aq[index][name] = newValue
+        this.setState({
+            addressQuantities: aq
         })
     }
 
@@ -57,14 +64,12 @@ class Distribution extends Component {
     render() {
         const { classes } = this.props
 
-        let addressQunatities = []
-        for (let aq in this.state.addressQuantities) {
-            addressQunatities.push(<div>
+        let addressQuantities = this.state.addressQuantities.map((aq, index) => {
+            return <div key={[index, ...aq]}>
                 <TextField
-                    id="quantity1"
                     label="Quantity"
-                    //value={}
-                    //onChange={}
+                    value={aq.quantity}
+                    onChange={ e => this.handleDistributionChange(index, 'quantity', e.target.value) }
                     type="number"
                     className={classes.textField}
                     InputLabelProps={{
@@ -73,68 +78,69 @@ class Distribution extends Component {
                     margin="normal"
                 />
                 <TextField
-                    id="slpAddress"
                     label="SLP Address"
                     className={classes.textField}
                     margin="normal"
-                    //value={this.state.slpAddress}
-                    //onChange={this.handleChange('slpAddress')}
+                    value={aq.address}
+                    onChange={ e => this.handleDistributionChange(index, 'address', e.target.value) }
                 /> <br />
-            </div>);
-        }
+            </div>;
+        })
 
         return (
             <div className={classes.root}>
-            <Paper className={classes.root} elevation={1}>
-                <Typography variant="headline" component="h3">
-                    Initial Distribution
-                </Typography>
-                <form noValidate autoComplete="off">
-                    <FormControlLabel
-                        control={
-                            <Checkbox
-                                checked={this.state.isFixedSupply}
-                                onChange={this.handleCheckbox('isFixedSupply')}
-                                value="isFixedSupply"
-                                color="primary"
-                            />
-                        }
-                        label="Fixed Supply"
-                    />
-                    { !this.state.isFixedSupply && 
-                    <span>
-                        <TextField
-                            id="batonAddress"
-                            label="Baton Address"
-                            className={classes.textField}
-                            margin="normal"
-                            //value={}
-                            //onChange={}
+            <Typography variant="headline" component="h3">
+                Initial Distribution
+            </Typography>
+            <form noValidate autoComplete="off">
+                <FormControlLabel
+                    control={
+                        <Checkbox
+                            checked={this.state.isFixedSupply}
+                            onChange={this.handleCheckbox('isFixedSupply')}
+                            value="isFixedSupply"
+                            color="primary"
                         />
-                    </span>
-                    } <br />
-                    {addressQunatities}
+                    }
+                    label="Fixed Supply"
+                />
+                { !this.state.isFixedSupply && 
+                <span>
+                    <TextField
+                        id="batonAddress"
+                        label="Baton Address"
+                        className={classes.textField}
+                        margin="normal"
+                        value={this.state.batonAddress}
+                        onChange={this.handleChange('batonAddress')}
+                    />
+                </span>
+                } <br />
+                {addressQuantities}
 
-                    { this.state.addressQuantities.length < 20 &&
-                        <Button 
-                            variant="contained" 
-                            color="secondary" 
-                            className={classes.button}
-                            onClick={ this.addAddressQuantity }
-                        >
-                            +
-                        </Button>
-                    }  <br/> <br/>
+                { this.state.addressQuantities.length <= 19 &&
                     <Button 
                         variant="contained" 
-                        color="primary" 
+                        color="secondary" 
                         className={classes.button}
-                        //onClick={ () =>  }
+                        onClick={ this.addAddressQuantity }
                     >
-                        Create
+                        +
                     </Button>
-                </form>
-            </Paper>
+                }  <br/> <br/>
+                <Button 
+                    variant="contained" 
+                    color="primary" 
+                    className={classes.button}
+                    onClick={ () => this.props.reviewToken(
+                        this.state.isFixedSupply,
+                        this.state.batonAddress,
+                        this.state.addressQuantities
+                    ) }
+                >
+                    Review
+                </Button>
+            </form>
             </div>
         );
     }
