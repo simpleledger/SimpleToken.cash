@@ -51,7 +51,7 @@ class Slp {
     }
 
     calcGenesisFee(batonAddress) {
-        let outputs = 3
+        let outputs = 4
         let dustOutputs = 1
 
         if (batonAddress != null) {
@@ -66,7 +66,7 @@ class Slp {
     }
 
     calcSendFee(outputAddressArray) {
-        let outputs = 4 + outputAddressArray.length
+        let outputs = 5 + outputAddressArray.length
 
         let fee = BITBOX.BitcoinCash.getByteCount({ P2PKH: 1 }, { P2PKH: outputs })
         fee += outputAddressArray.length * 546
@@ -85,7 +85,7 @@ class Slp {
                 console.log(ex)
             }
 
-            sleep(5000)
+            await sleep(5000)
         }
 
         onPaymentCB()
