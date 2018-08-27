@@ -10,7 +10,12 @@ import Done from './Done'
 import CreateTokenStepper from './CreateTokenStepper'
 import Footer from './Footer'
 
-import Slp from './slp-lib/slp'
+let BITBOXCli = require('bitbox-cli/lib/bitbox-cli').default
+let BITBOX = new BITBOXCli()
+
+let slp = require('slpjs').slp
+let slputils = require('slpjs').slputils
+let network = require('slpjs').network
 
 const theme = createMuiTheme({
   palette: {
@@ -23,6 +28,8 @@ const theme = createMuiTheme({
   },
 })
 
+const sleep = ms => new Promise(resolve => setTimeout(resolve, ms))
+
 class App extends Component {
   constructor(props) {
     super(props)
@@ -31,13 +38,24 @@ class App extends Component {
       activeStep: 0,
       tokenProps: {},
     }
+
+    let mnemonic = BITBOX.Mnemonic.generate(256)
+    let rootSeed = BITBOX.Mnemonic.toSeed(mnemonic)
+    let masterHDNode = BITBOX.HDNode.fromSeed(rootSeed, 'bitcoincash')
+    let hdNode = BITBOX.HDNode.derivePath(masterHDNode, "m/44'/145'/0'")
+    let node0 = BITBOX.HDNode.derivePath(hdNode, "0/0")
+    this.keyPair = BITBOX.HDNode.toKeyPair(node0)
+    let wif = BITBOX.ECPair.toWIF(this.keyPair)
+    let ecPair = BITBOX.ECPair.fromWIF(wif)
+    this.address = BITBOX.ECPair.toLegacyAddress(ecPair)
+    this.cashAddress = BITBOX.Address.toCashAddress(this.address)
+
+    // TODO: Save mnemonic to local storage for emergency recovery
   }
 
   componentDidMount() {
-    let slp = new Slp()
     this.setState({
-      slp: slp,
-      paymentAddress: slp.cashAddress
+      paymentAddress: this.cashAddress
     })
   }
 
@@ -54,7 +72,7 @@ class App extends Component {
   defineDistribution = (tokenProps) => {
     // Attempt to build genesis with initial properties
     try {
-      this.state.slp.buildGenesisOpReturn(
+      slp.buildGenesisOpReturn(
         tokenProps.ticker,
         tokenProps.name,
         tokenProps.urlOrEmail,
@@ -78,7 +96,7 @@ class App extends Component {
       // Build Genesis OpReturn
       let batonVout = isFixedSupply ? null : 2
       let initialQuantity = addressQuantities.reduce((acc, cur) => acc + parseInt(cur.quantity), 0)
-      let genesisOpReturn = this.state.slp.buildGenesisOpReturn(
+      let genesisOpReturn = slp.buildGenesisOpReturn(
         this.state.tokenProps.ticker,
         this.state.tokenProps.name,
         this.state.tokenProps.urlOrEmail,
@@ -89,7 +107,7 @@ class App extends Component {
 
       // Build send OpReturn (check for protocol errors)
       let outputQtyArray = addressQuantities.map((aq) => aq.quantity)
-      this.state.slp.buildSendOpReturn(
+      slp.buildSendOpReturn(
         '0000000000000000000000000000000000000000000000000000000000000000',
         this.state.tokenProps.decimalPlaces,
         outputQtyArray,
@@ -100,17 +118,17 @@ class App extends Component {
       let outputAddressArray = addressQuantities.map((aq) => aq.address)
       const onPayment = async () => {
         // Create genesis tx
-        let genesisChangeUtxo = await this.state.slp.sendGenesisTx(genesisOpReturn, batonAddress)
+        let genesisChangeUtxo = await network.sendGenesisTx(this.address, this.keyPair, genesisOpReturn, batonAddress)
         let genesisTxid = genesisChangeUtxo.txid
 
         // Build send opReturn with genesis txid
-        let sendOpReturn = this.state.slp.buildSendOpReturn(
+        let sendOpReturn = slp.buildSendOpReturn(
           genesisTxid,
           this.state.tokenProps.decimalPlaces,
           outputQtyArray,
         )
 
-        let sendTxid = await this.state.slp.sendSendTx(genesisChangeUtxo, sendOpReturn, outputAddressArray, this.state.paymentAddress)
+        let sendTxid = await network.sendSendTx(this.keyPair, genesisChangeUtxo, sendOpReturn, outputAddressArray, this.state.paymentAddress)
 
         this.setState({
           activeStep: this.nextStep(),
@@ -119,9 +137,9 @@ class App extends Component {
       }
 
       // calculate fee
-      let fee = this.state.slp.calcFee(batonAddress, outputAddressArray)
+      let fee = slputils.calculateFee(batonAddress, outputAddressArray)
 
-      this.state.slp.monitorForPayment(fee, onPayment.bind(this))
+      network.monitorForPayment(fee, onPayment.bind(this))
 
       // Update tokenProps
       let tokenProps = this.state.tokenProps
