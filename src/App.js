@@ -9,6 +9,9 @@ import Invoice from './Invoice'
 import Done from './Done'
 import CreateTokenStepper from './CreateTokenStepper'
 import Footer from './Footer'
+import { ToastContainer, toast } from 'react-toastify'
+import 'react-toastify/dist/ReactToastify.css'
+import 'react-toastify/dist/ReactToastify.min.css'
 
 let BITBOXCli = require('bitbox-cli/lib/bitbox-cli').default
 let BITBOX = new BITBOXCli()
@@ -88,8 +91,12 @@ class App extends Component {
         tokenProps: tokenProps,
       })
     } catch (ex) {
-      // TODO: Notify user
       console.log(ex) 
+
+      // Notify user
+      if (ex != null && ex.message != null) {
+        toast(ex.message)
+      }
     }
   }
 
@@ -169,8 +176,12 @@ class App extends Component {
         fee: fee,
       })
     } catch (ex) {
-      // TODO: Notify user
       console.log(ex)
+
+      // Notify user
+      if (ex != null && ex.message != null) {
+        toast(ex.message)
+      }
     }
   }
 
@@ -198,6 +209,7 @@ class App extends Component {
     }
 
     return (
+      <div>
       <MuiThemeProvider theme={theme}>
         <Header />
         <StepContainer>
@@ -206,6 +218,8 @@ class App extends Component {
         <CreateTokenStepper activeStep={this.state.activeStep} />
         {/* <Footer /> */}
       </MuiThemeProvider>
+      <ToastContainer />
+      </div>
     );
   }
 }
