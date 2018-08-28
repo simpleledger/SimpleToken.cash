@@ -115,13 +115,25 @@ class App extends Component {
         outputQtyArray,
       )
       
-      // Monitor for payment / create token on payment
+      // Validate batonAddress SLP format if nonfixed supply
+      if (!isFixedSupply && !bchaddr.isSlpAddress(batonAddress)){
+        throw new Error("Not an SLP address.");
+      } 
       batonAddress = isFixedSupply ? null : batonAddress
-      let outputAddressArray = addressQuantities.map((aq) => aq.address)
+
+      // Validate each output address SLP format and build array
+      let outputAddressArray = addressQuantities.map((aq) => {
+        if(!bchaddr.isSlpAddress(aq.address)){
+          throw new Error("Not an SLP address.");
+        }
+        return aq.address
+      })
+
+      // Monitor for payment / create token on payment
       const onPayment = async () => {
         // Create genesis tx
         let genesisTxData = await network.buildRawGenesisTx(this.slpAddress, this.keyPair, genesisOpReturn, batonAddress)
-        let genesisTxid = await network.sendTx(genesisTxData.hex); //genesisChangeUtxo.txid
+        let genesisTxid = await network.sendTx(genesisTxData.hex);
 
         // Build send opReturn with genesis txid
         let sendOpReturn = slp.buildSendOpReturn(
