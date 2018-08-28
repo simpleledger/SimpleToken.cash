@@ -16,6 +16,7 @@ let BITBOX = new BITBOXCli()
 let slp = require('slpjs').slp
 let slputils = require('slpjs').slputils
 let network = require('slpjs').network
+let bchaddr = require('bchaddrjs-slp')
 
 const theme = createMuiTheme({
   palette: {
@@ -49,6 +50,7 @@ class App extends Component {
     let ecPair = BITBOX.ECPair.fromWIF(wif)
     this.address = BITBOX.ECPair.toLegacyAddress(ecPair)
     this.cashAddress = BITBOX.Address.toCashAddress(this.address)
+    this.slpAddress = bchaddr.toSlpAddress(this.cashAddress)
 
     // TODO: Save mnemonic to local storage for emergency recovery
   }
@@ -118,8 +120,8 @@ class App extends Component {
       let outputAddressArray = addressQuantities.map((aq) => aq.address)
       const onPayment = async () => {
         // Create genesis tx
-        let genesisChangeUtxo = await network.sendGenesisTx(this.address, this.keyPair, genesisOpReturn, batonAddress)
-        let genesisTxid = genesisChangeUtxo.txid
+        let genesisTxData = await network.buildRawGenesisTx(this.slpAddress, this.keyPair, genesisOpReturn, batonAddress)
+        let genesisTxid = await network.sendTx(genesisTxData.hex); //genesisChangeUtxo.txid
 
         // Build send opReturn with genesis txid
         let sendOpReturn = slp.buildSendOpReturn(
@@ -128,7 +130,8 @@ class App extends Component {
           outputQtyArray,
         )
 
-        let sendTxid = await network.sendSendTx(this.keyPair, genesisChangeUtxo, sendOpReturn, outputAddressArray, this.state.paymentAddress)
+        let sendTxHex = await network.buildRawSendTx(this.keyPair, genesisTxid, 1, genesisTxData.satoshis, sendOpReturn, outputAddressArray, this.state.paymentAddress)
+        let sendTxId = await network.sendTx(sendTxHex);
 
         this.setState({
           activeStep: this.nextStep(),
@@ -139,7 +142,7 @@ class App extends Component {
       // calculate fee
       let fee = slputils.calculateFee(batonAddress, outputAddressArray)
 
-      network.monitorForPayment(fee, onPayment.bind(this))
+      network.monitorForPayment(this.state.paymentAddress, fee, onPayment.bind(this))
 
       // Update tokenProps
       let tokenProps = this.state.tokenProps

@@ -9,7 +9,8 @@
     "react": "^16.4.2",
     "react-dom": "^16.4.2",
     "react-scripts": "1.1.4",
-    "slpjs": "^0.0.5"
+    "slpjs": "^0.0.6",
+    "bchaddrjs-slp": "^0.2.5"
   },
   "scripts": {
     "start": "react-scripts start",
