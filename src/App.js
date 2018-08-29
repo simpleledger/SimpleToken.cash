@@ -18,7 +18,7 @@ let BITBOX = new BITBOXCli()
 
 let slp = require('slpjs').slp
 let slputils = require('slpjs').slputils
-let network = require('slpjs').network
+let network = require('slpjs').bitbox
 let bchaddr = require('bchaddrjs-slp')
 
 const theme = createMuiTheme({
@@ -32,7 +32,7 @@ const theme = createMuiTheme({
   },
 })
 
-const sleep = ms => new Promise(resolve => setTimeout(resolve, ms))
+//const sleep = ms => new Promise(resolve => setTimeout(resolve, ms))
 
 class App extends Component {
   constructor(props) {
@@ -49,8 +49,8 @@ class App extends Component {
     let hdNode = BITBOX.HDNode.derivePath(masterHDNode, "m/44'/145'/0'")
     let node0 = BITBOX.HDNode.derivePath(hdNode, "0/0")
     this.keyPair = BITBOX.HDNode.toKeyPair(node0)
-    let wif = BITBOX.ECPair.toWIF(this.keyPair)
-    let ecPair = BITBOX.ECPair.fromWIF(wif)
+    this.wif = BITBOX.ECPair.toWIF(this.keyPair)
+    let ecPair = BITBOX.ECPair.fromWIF(this.wif)
     this.address = BITBOX.ECPair.toLegacyAddress(ecPair)
     this.cashAddress = BITBOX.Address.toCashAddress(this.address)
     this.slpAddress = bchaddr.toSlpAddress(this.cashAddress)
@@ -77,14 +77,15 @@ class App extends Component {
   defineDistribution = (tokenProps) => {
     // Attempt to build genesis with initial properties
     try {
-      slp.buildGenesisOpReturn(
-        tokenProps.ticker,
-        tokenProps.name,
-        tokenProps.urlOrEmail,
-        tokenProps.decimalPlaces,
-        null,
-        1,
-      )
+        
+      slp.buildGenesisOpReturn({ 
+        ticker: tokenProps.ticker, 
+        name: tokenProps.name,
+        urlOrEmail: tokenProps.urlOrEmail, 
+        hash: null,
+        decimals: tokenProps.decimalPlaces, 
+        batonVout: null, // normally this is null (for fixed supply) or 2 for flexible
+        initialQuantity: 1 })
 
       this.setState({
         activeStep: this.nextStep(),
@@ -106,21 +107,22 @@ class App extends Component {
       let batonVout = isFixedSupply ? null : 2
       let initialQuantity = addressQuantities.reduce((acc, cur) => acc + parseInt(cur.quantity), 0)
       let genesisOpReturn = slp.buildGenesisOpReturn(
-        this.state.tokenProps.ticker,
-        this.state.tokenProps.name,
-        this.state.tokenProps.urlOrEmail,
-        this.state.tokenProps.decimalPlaces,
-        batonVout,
-        initialQuantity,
-      )
+        { ticker: this.state.tokenProps.ticker,
+          name: this.state.tokenProps.name,
+          urlOrEmail: this.state.tokenProps.urlOrEmail,
+          hash: null, 
+          decimals: this.state.tokenProps.decimalPlaces,
+          batonVout: batonVout,
+          initialQuantity: initialQuantity,
+        })
 
       // Build send OpReturn (check for protocol errors)
       let outputQtyArray = addressQuantities.map((aq) => aq.quantity)
-      slp.buildSendOpReturn(
-        '0000000000000000000000000000000000000000000000000000000000000000',
-        this.state.tokenProps.decimalPlaces,
-        outputQtyArray,
-      )
+      slp.buildSendOpReturn({
+            tokenIdHex: '0000000000000000000000000000000000000000000000000000000000000000',
+            decimals: this.state.tokenProps.decimalPlaces, 
+            outputQtyArray: outputQtyArray,
+        })
       
       // Validate batonAddress SLP format if nonfixed supply
       if (!isFixedSupply && !bchaddr.isSlpAddress(batonAddress)){
@@ -138,18 +140,43 @@ class App extends Component {
 
       // Monitor for payment / create token on payment
       const onPayment = async () => {
+
+        let utxo = await network.getUtxo(this.cashAddress);
+
         // Create genesis tx
-        let genesisTxData = await network.buildRawGenesisTx(this.slpAddress, this.keyPair, genesisOpReturn, batonAddress)
+        let genesisTxData = slp.buildRawGenesisTx({
+          slpGenesisOpReturn: genesisOpReturn, 
+          mintReceiverAddress: this.slpAddress,
+          batonReceiverAddress: batonAddress,
+          utxo_txid: utxo.txid,
+          utxo_vout: utxo.vout,
+          utxo_satoshis: utxo.satoshis,
+          wif: this.wif
+        })
+
         let genesisTxid = await network.sendTx(genesisTxData.hex);
 
         // Build send opReturn with genesis txid
-        let sendOpReturn = slp.buildSendOpReturn(
-          genesisTxid,
-          this.state.tokenProps.decimalPlaces,
-          outputQtyArray,
-        )
+        let sendOpReturn = slp.buildSendOpReturn({
+            tokenIdHex: genesisTxid,
+            decimals: this.state.tokenProps.decimalPlaces, 
+            outputQtyArray: outputQtyArray,
+        })
 
-        let sendTxHex = await network.buildRawSendTx(this.keyPair, genesisTxid, 1, genesisTxData.satoshis, sendOpReturn, outputAddressArray, this.state.paymentAddress)
+        let sendTxHex = slp.buildRawSendTx({
+          slpSendOpReturn: sendOpReturn,
+          input_token_utxos: [ 
+            { 
+              token_utxo_txid: genesisTxid,
+              token_utxo_vout: 1,
+              token_utxo_satoshis: genesisTxData.satoshis 
+            }
+          ],
+          tokenReceiverAddressArray: outputAddressArray,
+          bchChangeAddress: this.state.paymentAddress,
+          wif: this.wif
+        })
+
         let sendTxId = await network.sendTx(sendTxHex);
 
         this.setState({
