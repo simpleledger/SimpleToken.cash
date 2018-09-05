@@ -118,7 +118,7 @@ class Distribution extends Component {
                 } <br />
                 {addressQuantities}
 
-                { this.state.addressQuantities.length <= 19 &&
+                { this.state.addressQuantities.length < 19 &&
                     <Button 
                         variant="contained" 
                         color="secondary" 
