@@ -17,9 +17,9 @@ let BITBOXCli = require('bitbox-cli/lib/bitbox-cli').default
 let BITBOX = new BITBOXCli()
 
 let slp = require('slpjs').slp
-let slputils = require('slpjs').slputils
 let network = require('slpjs').bitbox
 let bchaddr = require('bchaddrjs-slp')
+let BigNumber = require('bignumber.js')
 
 const theme = createMuiTheme({
   palette: {
@@ -77,15 +77,14 @@ class App extends Component {
   defineDistribution = (tokenProps) => {
     // Attempt to build genesis with initial properties
     try {
-        
       slp.buildGenesisOpReturn({ 
         ticker: tokenProps.ticker, 
         name: tokenProps.name,
         urlOrEmail: tokenProps.urlOrEmail, 
         hash: null,
-        decimals: tokenProps.decimalPlaces, 
+        decimals: parseInt(tokenProps.decimalPlaces), 
         batonVout: null, // normally this is null (for fixed supply) or 2 for flexible
-        initialQuantity: 1 })
+        initialQuantity: new BigNumber(0) })
 
       this.setState({
         activeStep: this.nextStep(),
@@ -105,24 +104,24 @@ class App extends Component {
     try {
       // Build Genesis OpReturn
       let batonVout = isFixedSupply ? null : 2
-      let initialQuantity = addressQuantities.reduce((acc, cur) => acc + parseInt(cur.quantity), 0)
+      let initialQuantity = new BigNumber(addressQuantities.reduce((acc, cur) => acc + parseFloat(cur.quantity), 0));
       let genesisOpReturn = slp.buildGenesisOpReturn(
-        { ticker: this.state.tokenProps.ticker,
+      { 
+          ticker: this.state.tokenProps.ticker,
           name: this.state.tokenProps.name,
           urlOrEmail: this.state.tokenProps.urlOrEmail,
           hash: null, 
-          decimals: this.state.tokenProps.decimalPlaces,
+          decimals: parseInt(this.state.tokenProps.decimalPlaces),
           batonVout: batonVout,
-          initialQuantity: initialQuantity,
-        })
+          initialQuantity: initialQuantity.times(10**parseInt(this.state.tokenProps.decimalPlaces))
+      })
 
       // Build send OpReturn (check for protocol errors)
-      let outputQtyArray = addressQuantities.map((aq) => aq.quantity)
-      slp.buildSendOpReturn({
+      let outputQtyArray = addressQuantities.map((aq) => (new BigNumber(parseFloat(aq.quantity))).times(10**parseInt(this.state.tokenProps.decimalPlaces)));
+      let sendOpReturn = slp.buildSendOpReturn({
             tokenIdHex: '0000000000000000000000000000000000000000000000000000000000000000',
-            decimals: this.state.tokenProps.decimalPlaces, 
             outputQtyArray: outputQtyArray,
-        })
+      })
       
       // Validate batonAddress SLP format if nonfixed supply
       if (!isFixedSupply && !bchaddr.isSlpAddress(batonAddress)){
@@ -140,26 +139,33 @@ class App extends Component {
 
       // Monitor for payment / create token on payment
       const onPayment = async () => {
+        
+        let utxo = (await network.getUtxoWithRetry(this.cashAddress))[0];
+        
+        // calculate the amount the mint holder needs to cover the SEND txn
+        let mintReceiverSatoshis = sendTxCost
 
-        let utxo = await network.getUtxo(this.cashAddress);
-
-        // Create genesis tx
-        let genesisTxData = slp.buildRawGenesisTx({
+        let genesisTxHex = slp.buildRawGenesisTx({
           slpGenesisOpReturn: genesisOpReturn, 
           mintReceiverAddress: this.slpAddress,
+          mintReceiverSatoshis: mintReceiverSatoshis,
           batonReceiverAddress: batonAddress,
-          utxo_txid: utxo.txid,
-          utxo_vout: utxo.vout,
-          utxo_satoshis: utxo.satoshis,
+          batonReceiverSatoshis: 546,
+          bchChangeReceiverAddress: null, 
+          input_utxos: [{
+              utxo_txid: utxo.txid,
+              utxo_vout: utxo.vout,
+              utxo_satoshis: utxo.satoshis,
+          }],
           wif: this.wif
         })
 
-        let genesisTxid = await network.sendTx(genesisTxData.hex);
+        console.log("GENESIS Tx Size (bytes): " + (genesisTxHex.length / 2).toString())
+        let genesisTxid = await network.sendTx(genesisTxHex);
 
         // Build send opReturn with genesis txid
         let sendOpReturn = slp.buildSendOpReturn({
             tokenIdHex: genesisTxid,
-            decimals: this.state.tokenProps.decimalPlaces, 
             outputQtyArray: outputQtyArray,
         })
 
@@ -169,14 +175,15 @@ class App extends Component {
             { 
               token_utxo_txid: genesisTxid,
               token_utxo_vout: 1,
-              token_utxo_satoshis: genesisTxData.satoshis 
+              token_utxo_satoshis: mintReceiverSatoshis
             }
           ],
           tokenReceiverAddressArray: outputAddressArray,
-          bchChangeAddress: this.state.paymentAddress,
+          bchChangeReceiverAddress: null,
           wif: this.wif
         })
 
+        console.log("SEND Tx Size (bytes): " + (sendTxHex.length / 2).toString())
         let sendTxId = await network.sendTx(sendTxHex);
 
         this.setState({
@@ -185,22 +192,24 @@ class App extends Component {
         })
       }
 
-      // calculate fee
-      let fee = slputils.calculateFee(batonAddress, outputAddressArray)
+      // calculate user's cost (outputs + minerFee)
+      let genesisTxCost = slp.calculateGenesisCost(genesisOpReturn.length, 1, batonAddress)
+      let sendTxCost = slp.calculateSendCost(sendOpReturn.length, 1, outputAddressArray.length)
+      let userCost = genesisTxCost + sendTxCost - 546 // subtract double counted dust output from Genesis Mint
 
-      network.monitorForPayment(this.state.paymentAddress, fee, onPayment.bind(this))
+      network.monitorForPayment(this.state.paymentAddress, userCost, onPayment.bind(this))
 
       // Update tokenProps
       let tokenProps = this.state.tokenProps
       tokenProps.isFixedSupply = isFixedSupply
       tokenProps.batonAddress = batonAddress
-      tokenProps.initialQuantity = initialQuantity
+      tokenProps.initialQuantity = initialQuantity.toString()
       tokenProps.addressQuantities = addressQuantities
 
       this.setState({
         activeStep: this.nextStep(),
         tokenProps: tokenProps,
-        fee: fee,
+        fee: userCost,
       })
     } catch (ex) {
       console.log(ex)
