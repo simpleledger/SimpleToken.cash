@@ -25,7 +25,7 @@ class Invoice extends Component {
 
     let initialDistribution = this.props.addressQuantities.map((aq, index) => {
         return <div key={[index, ...aq]}>
-            <b>{aq.address}</b> {aq.quantity}
+            <b>{aq.address}</b> {parseInt(aq.quantity)}
         </div>;
     })
 
