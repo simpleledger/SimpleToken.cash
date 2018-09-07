@@ -99,14 +99,18 @@ class App extends Component {
       }
     }
   }
-
+  //MAX_NUMBER = new BigNumber('18446744073709551615')
   reviewToken = (isFixedSupply, batonAddress, addressQuantities) => {
     try {
       // Build Genesis OpReturn
       let batonVout = isFixedSupply ? null : 2
-      let initialQuantity = new BigNumber(addressQuantities.reduce((acc, cur) => acc + parseFloat(cur.quantity), 0));
+      let initialQuantity = addressQuantities.reduce((acc, cur) => (new BigNumber(cur.quantity)).plus(acc), new BigNumber(0));
+      let MAX_QTY = new BigNumber('18446744073709551615').dividedBy(10**parseInt(this.state.tokenProps.decimalPlaces));
+      if(initialQuantity > MAX_QTY){
+        throw new Error("Maximum total send token quantity exceeded.  Reduce input quantity below " + MAX_QTY.toString());
+      }
       let genesisOpReturn = slp.buildGenesisOpReturn(
-      { 
+      {
           ticker: this.state.tokenProps.ticker,
           name: this.state.tokenProps.name,
           urlOrEmail: this.state.tokenProps.urlOrEmail,
@@ -117,7 +121,7 @@ class App extends Component {
       })
 
       // Build send OpReturn (check for protocol errors)
-      let outputQtyArray = addressQuantities.map((aq) => (new BigNumber(parseFloat(aq.quantity))).times(10**parseInt(this.state.tokenProps.decimalPlaces)));
+      let outputQtyArray = addressQuantities.map((aq) => (new BigNumber(aq.quantity)).times(10**parseInt(this.state.tokenProps.decimalPlaces)));
       let sendOpReturn = slp.buildSendOpReturn({
             tokenIdHex: '0000000000000000000000000000000000000000000000000000000000000000',
             outputQtyArray: outputQtyArray,
@@ -153,11 +157,11 @@ class App extends Component {
           batonReceiverSatoshis: 546,
           bchChangeReceiverAddress: null, 
           input_utxos: [{
-              utxo_txid: utxo.txid,
-              utxo_vout: utxo.vout,
-              utxo_satoshis: utxo.satoshis,
-          }],
-          wif: this.wif
+            txid: utxo.txid,
+            vout: utxo.vout,
+            satoshis: utxo.satoshis,
+            wif: this.wif
+          }]
         })
 
         console.log("GENESIS Tx Size (bytes): " + (genesisTxHex.length / 2).toString())
@@ -173,14 +177,14 @@ class App extends Component {
           slpSendOpReturn: sendOpReturn,
           input_token_utxos: [ 
             { 
-              token_utxo_txid: genesisTxid,
-              token_utxo_vout: 1,
-              token_utxo_satoshis: mintReceiverSatoshis
+              txid: genesisTxid,
+              vout: 1,
+              satoshis: mintReceiverSatoshis,
+              wif: this.wif
             }
           ],
           tokenReceiverAddressArray: outputAddressArray,
-          bchChangeReceiverAddress: null,
-          wif: this.wif
+          bchChangeReceiverAddress: null
         })
 
         console.log("SEND Tx Size (bytes): " + (sendTxHex.length / 2).toString())
