@@ -105,8 +105,7 @@ class App extends Component {
       // Build Genesis OpReturn
       let batonVout = isFixedSupply ? null : 2
       let initialQuantity = addressQuantities.reduce((acc, cur) => (new BigNumber(cur.quantity)).plus(acc), new BigNumber(0));
-      let MAX_QTY = new BigNumber('18446744073709551615').dividedBy(10**parseInt(this.state.tokenProps.decimalPlaces));
-      if(initialQuantity > MAX_QTY){
+      if (initialQuantity.isGreaterThan(MAX_QTY)) {
         throw new Error("Maximum total send token quantity exceeded.  Reduce input quantity below " + MAX_QTY.toString());
       }
       let genesisOpReturn = slp.buildGenesisOpReturn(
