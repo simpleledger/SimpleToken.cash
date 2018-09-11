@@ -1,5 +1,6 @@
 import React, { Component } from 'react'
 import { MuiThemeProvider, createMuiTheme } from '@material-ui/core/styles'
+import TermsDialog from './TermsDialog'
 import Header from './Header'
 import StepContainer from './StepContainer'
 import Intro from './Intro'
@@ -31,8 +32,6 @@ const theme = createMuiTheme({
     },
   },
 })
-
-//const sleep = ms => new Promise(resolve => setTimeout(resolve, ms))
 
 class App extends Component {
   constructor(props) {
@@ -95,7 +94,7 @@ class App extends Component {
 
       // Notify user
       if (ex != null && ex.message != null) {
-        toast(ex.message)
+        toast.error(ex.message)
       }
     }
   }
@@ -220,7 +219,7 @@ class App extends Component {
 
       // Notify user
       if (ex != null && ex.message != null) {
-        toast(ex.message)
+        toast.error(ex.message)
       }
     }
   }
@@ -251,6 +250,7 @@ class App extends Component {
     return (
       <div>
       <MuiThemeProvider theme={theme}>
+        <TermsDialog />
         <Header />
         <StepContainer>
           { stepComponent }
@@ -258,7 +258,9 @@ class App extends Component {
         <CreateTokenStepper activeStep={this.state.activeStep} />
         {/* <Footer /> */}
       </MuiThemeProvider>
-      <ToastContainer />
+      <ToastContainer
+        autoClose={20 * 1000}
+      />
       </div>
     );
   }
