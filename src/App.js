@@ -149,14 +149,14 @@ class App extends Component {
 
       // Validate batonAddress SLP format if nonfixed supply
       if (!isFixedSupply && !bchaddr.isSlpAddress(batonAddress)) {
-        throw new Error("Not an SLP address.");
+        throw new Error("Address must be in simpleledger address format.");
       }
       batonAddress = isFixedSupply ? null : batonAddress
 
       // Validate each output address SLP format and build array
       let outputAddressArray = addressQuantities.map((aq) => {
         if (!bchaddr.isSlpAddress(aq.address)) {
-          throw new Error("Not an SLP address.");
+          throw new Error("Address must be in simpleledger address format.");
         }
         return aq.address
       })
