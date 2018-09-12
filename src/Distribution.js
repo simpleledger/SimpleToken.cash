@@ -68,6 +68,16 @@ class Distribution extends Component {
         })
     }
 
+    removeAddressQuantity = index => {
+        let addressQuantities = this.state.addressQuantities.slice()
+        if(index > -1) {
+            addressQuantities.splice(index, 1);
+            this.setState({
+                addressQuantities: addressQuantities
+            })
+        }
+    }
+
     render() {
         const { classes } = this.props
 
@@ -90,7 +100,17 @@ class Distribution extends Component {
                     margin="normal"
                     value={aq.address}
                     onChange={ e => this.handleDistributionChange(index, 'address', e.target.value) }
-                /> <br />
+                />
+                { this.state.addressQuantities.length > 1 &&
+                    <Button
+                        variant="contained" 
+                        color="secondary" 
+                        className={classes.button}
+                        onClick={ e => this.removeAddressQuantity(index) }
+                    >
+                        -
+                    </Button>
+                } <br />
             </div>;
         })
 
