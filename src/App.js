@@ -67,6 +67,12 @@ class App extends Component {
     return this.state.activeStep + 1
   }
 
+  toPreviousStep = () => {
+    this.setState({
+      activeStep: this.state.activeStep - 1
+    })
+  }
+
   defineToken = () => {
     this.setState({
       activeStep: this.nextStep(),
@@ -228,19 +234,20 @@ class App extends Component {
     let stepComponent = null
     switch(this.state.activeStep) {
       case 0:
-        stepComponent = <Intro defineToken={this.defineToken} />
+        stepComponent = <Intro defineToken={this.defineToken} toPreviousStep={this.toPreviousStep} />
         break
       case 1:
-        stepComponent = <CreateTokenForm defineDistribution={this.defineDistribution} />
+        stepComponent = <CreateTokenForm defineDistribution={this.defineDistribution} toPreviousStep={this.toPreviousStep} />
         break
       case 2:
-        stepComponent = <Distribution reviewToken={this.reviewToken} />
+        stepComponent = <Distribution reviewToken={this.reviewToken} toPreviousStep={this.toPreviousStep} />
         break
       case 3:
         stepComponent = <Invoice 
             {...this.state.tokenProps}
             paymentAddress={this.state.paymentAddress}
             fee={this.state.fee}
+            toPreviousStep={this.toPreviousStep}
           />
         break
       case 4:
