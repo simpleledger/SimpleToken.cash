@@ -3,6 +3,7 @@ import PropTypes from 'prop-types'
 import { withStyles } from '@material-ui/core/styles'
 import Typography from '@material-ui/core/Typography'
 import QRCode from 'qrcode.react'
+import Button from '@material-ui/core/Button'
 
 const classStyles = theme => ({
     root: {
@@ -10,6 +11,12 @@ const classStyles = theme => ({
         paddingTop: theme.spacing.unit * 2,
         paddingBottom: theme.spacing.unit * 2,
     },
+    fieldsetLegend: {
+        fontSize: '1.3rem',
+    },
+    initialDistributionAddresses: {
+        marginLeft: '10px',
+    }
 });
 
 class Invoice extends Component {
@@ -31,10 +38,8 @@ class Invoice extends Component {
 
     return (
       <div className={classes.root}>
-        <Typography variant="headline" component="h3">
-            Review
-        </Typography>
-        <div>
+        <fieldset>
+            <legend className={classes.fieldsetLegend}>Review</legend>
             <b>Name</b> {this.props.name} <br/>
             <b>Ticker</b> {this.props.ticker} <br/>
             <b>URL</b> {this.props.urlOrEmail} <br/>
@@ -42,19 +47,33 @@ class Invoice extends Component {
             <b>Initial Quantity</b> {this.props.initialQuantity} <br/>
             <b>Fixed Supply</b> { this.props.isFixedSupply ? "Yes" : "No" } <br/>
             {batonAddress}
-            <b>Initial Distribution</b> {initialDistribution} <br/>
-        </div> <br/>
-        <Typography variant="title">
-            Pay Mining Fee
-        </Typography>
-        <div>
-            Send {this.props.fee} satoshis to {this.props.paymentAddress}
-        </div>
-        
-        <QRCode value={this.props.paymentAddress} />
+            <b>Initial Distribution</b>
+            <div className={classes.initialDistributionAddresses}>
+                {initialDistribution}
+            </div>
+        </fieldset> <br/>
+
+        <fieldset>
+            <legend className={classes.fieldsetLegend}>Pay Mining Fee</legend>
+            <div>
+                Send {this.props.fee} satoshis to {this.props.paymentAddress}
+            </div>
+            
+            <QRCode value={this.props.paymentAddress} />
+
+            <br/>
+            Waiting for payment... <br/>
+        </fieldset>
 
         <br/>
-        Waiting for payment... <br/>
+        <Button 
+            variant="contained" 
+            color="secondary" 
+            className={classes.button}
+            onClick={ () => this.props.toPreviousStep() }
+        >
+            Back
+        </Button>
       </div>
     );
   }
