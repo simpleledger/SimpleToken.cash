@@ -82,21 +82,22 @@ class App extends Component {
   defineDistribution = (tokenProps) => {
     // Attempt to build genesis with initial properties
     try {
-      slp.buildGenesisOpReturn({ 
-        ticker: tokenProps.ticker, 
+      slp.buildGenesisOpReturn({
+        ticker: tokenProps.ticker,
         name: tokenProps.name,
-        urlOrEmail: tokenProps.urlOrEmail, 
+        urlOrEmail: tokenProps.urlOrEmail,
         hash: null,
-        decimals: parseInt(tokenProps.decimalPlaces), 
+        decimals: parseInt(tokenProps.decimalPlaces),
         batonVout: null, // normally this is null (for fixed supply) or 2 for flexible
-        initialQuantity: new BigNumber(0) })
+        initialQuantity: new BigNumber(0)
+      })
 
       this.setState({
         activeStep: this.nextStep(),
         tokenProps: tokenProps,
       })
     } catch (ex) {
-      console.log(ex) 
+      console.log(ex)
 
       // Notify user
       if (ex != null && ex.message != null) {
@@ -110,37 +111,37 @@ class App extends Component {
       // Build Genesis OpReturn
       let batonVout = isFixedSupply ? null : 2
       let initialQuantity = addressQuantities.reduce((acc, cur) => (new BigNumber(cur.quantity)).plus(acc), new BigNumber(0));
-      let MAX_QTY = new BigNumber('18446744073709551615').dividedBy(10**parseInt(this.state.tokenProps.decimalPlaces));
-      if(initialQuantity > MAX_QTY){
+      let MAX_QTY = new BigNumber('18446744073709551615').dividedBy(10 ** parseInt(this.state.tokenProps.decimalPlaces));
+      if (initialQuantity.isGreaterThan(MAX_QTY)) {
         throw new Error("Maximum total send token quantity exceeded.  Reduce input quantity below " + MAX_QTY.toString());
       }
       let genesisOpReturn = slp.buildGenesisOpReturn(
-      {
+        {
           ticker: this.state.tokenProps.ticker,
           name: this.state.tokenProps.name,
           urlOrEmail: this.state.tokenProps.urlOrEmail,
-          hash: null, 
+          hash: null,
           decimals: parseInt(this.state.tokenProps.decimalPlaces),
           batonVout: batonVout,
-          initialQuantity: initialQuantity.times(10**parseInt(this.state.tokenProps.decimalPlaces))
-      })
+          initialQuantity: initialQuantity.times(10 ** parseInt(this.state.tokenProps.decimalPlaces))
+        })
 
       // Build send OpReturn (check for protocol errors)
-      let outputQtyArray = addressQuantities.map((aq) => (new BigNumber(aq.quantity)).times(10**parseInt(this.state.tokenProps.decimalPlaces)));
+      let outputQtyArray = addressQuantities.map((aq) => (new BigNumber(aq.quantity)).times(10 ** parseInt(this.state.tokenProps.decimalPlaces)));
       let sendOpReturn = slp.buildSendOpReturn({
-            tokenIdHex: '0000000000000000000000000000000000000000000000000000000000000000',
-            outputQtyArray: outputQtyArray,
+        tokenIdHex: '0000000000000000000000000000000000000000000000000000000000000000',
+        outputQtyArray: outputQtyArray,
       })
-      
+
       // Validate batonAddress SLP format if nonfixed supply
-      if (!isFixedSupply && !bchaddr.isSlpAddress(batonAddress)){
+      if (!isFixedSupply && !bchaddr.isSlpAddress(batonAddress)) {
         throw new Error("Not an SLP address.");
-      } 
+      }
       batonAddress = isFixedSupply ? null : batonAddress
 
       // Validate each output address SLP format and build array
       let outputAddressArray = addressQuantities.map((aq) => {
-        if(!bchaddr.isSlpAddress(aq.address)){
+        if (!bchaddr.isSlpAddress(aq.address)) {
           throw new Error("Not an SLP address.");
         }
         return aq.address
@@ -148,19 +149,19 @@ class App extends Component {
 
       // Monitor for payment / create token on payment
       const onPayment = async () => {
-        
+
         let utxo = (await network.getUtxoWithRetry(this.cashAddress))[0];
-        
+
         // calculate the amount the mint holder needs to cover the SEND txn
         let mintReceiverSatoshis = sendTxCost
 
         let genesisTxHex = slp.buildRawGenesisTx({
-          slpGenesisOpReturn: genesisOpReturn, 
+          slpGenesisOpReturn: genesisOpReturn,
           mintReceiverAddress: this.slpAddress,
           mintReceiverSatoshis: mintReceiverSatoshis,
           batonReceiverAddress: batonAddress,
           batonReceiverSatoshis: 546,
-          bchChangeReceiverAddress: null, 
+          bchChangeReceiverAddress: null,
           input_utxos: [{
             txid: utxo.txid,
             vout: utxo.vout,
@@ -174,14 +175,14 @@ class App extends Component {
 
         // Build send opReturn with genesis txid
         let sendOpReturn = slp.buildSendOpReturn({
-            tokenIdHex: genesisTxid,
-            outputQtyArray: outputQtyArray,
+          tokenIdHex: genesisTxid,
+          outputQtyArray: outputQtyArray,
         })
 
         let sendTxHex = slp.buildRawSendTx({
           slpSendOpReturn: sendOpReturn,
-          input_token_utxos: [ 
-            { 
+          input_token_utxos: [
+            {
               txid: genesisTxid,
               vout: 1,
               satoshis: mintReceiverSatoshis,
@@ -232,7 +233,7 @@ class App extends Component {
 
   render() {
     let stepComponent = null
-    switch(this.state.activeStep) {
+    switch (this.state.activeStep) {
       case 0:
         stepComponent = <Intro defineToken={this.defineToken} toPreviousStep={this.toPreviousStep} />
         break
