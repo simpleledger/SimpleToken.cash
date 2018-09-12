@@ -13,13 +13,16 @@ const classStyles = theme => ({
         paddingTop: theme.spacing.unit * 2,
         paddingBottom: theme.spacing.unit * 2,
     },
+    button: {
+        margin: theme.spacing.unit,
+    },
 });
 
 class Distribution extends Component {
     constructor(props) {
         super(props)
 
-        this.state = {
+        this.state = props.stepState ? props.stepState : {
             isFixedSupply: true,
             batonAddress: '',
             addressQuantities: [{
@@ -27,6 +30,10 @@ class Distribution extends Component {
                 quantity: '',
             }],
         }
+    }
+
+    componentWillUnmount() {
+        this.props.saveStepState(this.state)
     }
 
     handleChange = name => event => {
@@ -128,6 +135,14 @@ class Distribution extends Component {
                         +
                     </Button>
                 }  <br/> <br/>
+                <Button 
+                    variant="contained" 
+                    color="secondary" 
+                    className={classes.button}
+                    onClick={ () => this.props.toPreviousStep() }
+                >
+                    Back
+                </Button>
                 <Button 
                     variant="contained" 
                     color="primary" 

@@ -40,6 +40,7 @@ class App extends Component {
     this.state = {
       activeStep: 0,
       tokenProps: {},
+      stepState: {},
     }
 
     let mnemonic = BITBOX.Mnemonic.generate(256)
@@ -54,12 +55,25 @@ class App extends Component {
     this.cashAddress = BITBOX.Address.toCashAddress(this.address)
     this.slpAddress = bchaddr.toSlpAddress(this.cashAddress)
 
-    // TODO: Save mnemonic to local storage for emergency recovery
+    // Emergency recovery option
+    let recovery = JSON.parse(localStorage.getItem('recovery'))
+    if (recovery == null) recovery = []
+    recovery.push(mnemonic)
+    localStorage.setItem('recovery', JSON.stringify(recovery))
   }
 
   componentDidMount() {
     this.setState({
       paymentAddress: this.cashAddress
+    })
+  }
+
+  saveStepState = step => state => {
+    this.setState({
+      stepState: {
+        ...this.state.stepState,
+        [step]: state
+      }
     })
   }
 
@@ -233,15 +247,28 @@ class App extends Component {
 
   render() {
     let stepComponent = null
-    switch (this.state.activeStep) {
+    let step = this.state.activeStep
+    switch (step) {
       case 0:
-        stepComponent = <Intro defineToken={this.defineToken} toPreviousStep={this.toPreviousStep} />
+        stepComponent = <Intro 
+          defineToken={this.defineToken}
+        />
         break
       case 1:
-        stepComponent = <CreateTokenForm defineDistribution={this.defineDistribution} toPreviousStep={this.toPreviousStep} />
+        stepComponent = <CreateTokenForm 
+          defineDistribution={this.defineDistribution}
+          toPreviousStep={this.toPreviousStep}
+          saveStepState={this.saveStepState(step)}
+          stepState={this.state.stepState[step]}
+        />
         break
       case 2:
-        stepComponent = <Distribution reviewToken={this.reviewToken} toPreviousStep={this.toPreviousStep} />
+        stepComponent = <Distribution 
+          reviewToken={this.reviewToken} 
+          toPreviousStep={this.toPreviousStep} 
+          saveStepState={this.saveStepState(step)}
+          stepState={this.state.stepState[step]}
+        />
         break
       case 3:
         stepComponent = <Invoice 
@@ -252,7 +279,10 @@ class App extends Component {
           />
         break
       case 4:
-        stepComponent = <Done {...this.state.tokenProps} tokenId={this.state.tokenId} />
+        stepComponent = <Done 
+          {...this.state.tokenProps} 
+          tokenId={this.state.tokenId} 
+        />
     }
 
     return (

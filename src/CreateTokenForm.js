@@ -25,12 +25,17 @@ class CreateTokenForm extends Component {
     constructor(props) {
         super(props)
 
-        this.state = {
+        // Restore previous state or initialize default values
+        this.state = props.stepState ? props.stepState : {
             name: '',
             ticker: '',
             urlOrEmail: '',
             decimalPlaces: 0,
         }
+    }
+
+    componentWillUnmount() {
+        this.props.saveStepState(this.state)
     }
 
     handleChange = name => event => {
@@ -80,6 +85,14 @@ class CreateTokenForm extends Component {
                     value={this.state.decimalPlaces}
                     onChange={this.handleChange('decimalPlaces')}
                 /> <br />
+                <Button 
+                    variant="contained" 
+                    color="secondary" 
+                    className={classes.button}
+                    onClick={ () => this.props.toPreviousStep() }
+                >
+                    Back
+                </Button>
                 <Button 
                     variant="contained" 
                     color="primary" 
