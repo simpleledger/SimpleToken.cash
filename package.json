@@ -2,7 +2,7 @@
   "name": "simpletoken.cash",
   "version": "0.1.0",
   "private": true,
-  "homepage": "https://simpleledger.github.io/SimpleToken.cash",
+  "homepage": "https://simpletoken.cash",
   "dependencies": {
     "@material-ui/core": "^1.5.1",
     "autoprefixer": "7.1.6",
