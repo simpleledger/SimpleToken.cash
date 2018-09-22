@@ -42,7 +42,7 @@ class Invoice extends Component {
             <legend className={classes.fieldsetLegend}>Review</legend>
             <b>Name</b> {this.props.name} <br/>
             <b>Ticker</b> {this.props.ticker} <br/>
-            <b>URL</b> {this.props.urlOrEmail} <br/>
+            <b>Token Document URL</b> {this.props.tokenDocURL} <br/>
             <b>Decimal Places</b> {this.props.decimalPlaces} <br/>
             <b>Initial Quantity</b> {this.props.initialQuantity} <br/>
             <b>Fixed Supply</b> { this.props.isFixedSupply ? "Yes" : "No" } <br/>

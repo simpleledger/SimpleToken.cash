@@ -99,12 +99,30 @@ class App extends Component {
       slp.buildGenesisOpReturn({
         ticker: tokenProps.ticker,
         name: tokenProps.name,
-        urlOrEmail: tokenProps.urlOrEmail,
+        tokenDocURL: tokenProps.tokenDocURL,
+        tokenDocHash: tokenProps.tokenDocHash,
         hash: null,
         decimals: parseInt(tokenProps.decimalPlaces),
         batonVout: null, // normally this is null (for fixed supply) or 2 for flexible
         initialQuantity: new BigNumber(0)
-      })
+      });
+
+      var strTokenDocHash = tokenProps.tokenDocHash;
+      if (strTokenDocHash.length != 0)
+      {
+        // check Token Document Hash should have 64 hex characters.
+        if (strTokenDocHash.length != 64) {
+            toast.error("Token Document Hash should have 64 hex characters.");
+            return;
+        }
+
+        // check Token Document Hash should be hexademical chracters.
+        var re = /^[0-9a-fA-F]+$/;
+        if(!re.test(strTokenDocHash)) {
+            toast.error("Token Document Hash should be hexademical characters.");
+            return;
+        }
+      }
 
       this.setState({
         activeStep: this.nextStep(),
@@ -133,7 +151,7 @@ class App extends Component {
         {
           ticker: this.state.tokenProps.ticker,
           name: this.state.tokenProps.name,
-          urlOrEmail: this.state.tokenProps.urlOrEmail,
+          tokenDocURL: this.state.tokenProps.tokenDocURL,
           hash: null,
           decimals: parseInt(this.state.tokenProps.decimalPlaces),
           batonVout: batonVout,

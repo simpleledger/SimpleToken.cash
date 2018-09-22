@@ -29,7 +29,8 @@ class CreateTokenForm extends Component {
         this.state = props.stepState ? props.stepState : {
             name: '',
             ticker: '',
-            urlOrEmail: '',
+            tokenDocURL: '',
+            tokenDocHash: '',
             decimalPlaces: 0,
         }
     }
@@ -70,13 +71,23 @@ class CreateTokenForm extends Component {
                     onChange={this.handleChange('ticker')}
                 /> <br />
                 <TextField
-                    id="urlOrEmail"
-                    label="URL or Email"
+                    id="tokenDocURL"
+                    label="Token Document URL"
                     className={classes.textField}
                     margin="normal"
-                    value={this.state.urlOrEmail}
-                    onChange={this.handleChange('urlOrEmail')}
+                    value={this.state.tokenDocURL}
+                    onChange={this.handleChange('tokenDocURL')}
                 /> <br />
+
+                <TextField
+                    id="tokenDocHash"
+                    label="Token Document Hash"
+                    className={classes.textField}
+                    margin="normal"
+                    value={this.state.tokenDocHash}
+                    onChange={this.handleChange('tokenDocHash')}
+                /> <br />
+
                 <TextField
                     id="decimalPlaces"
                     label="Decimal Places"
