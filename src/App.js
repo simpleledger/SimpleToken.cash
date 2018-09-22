@@ -100,8 +100,7 @@ class App extends Component {
         ticker: tokenProps.ticker,
         name: tokenProps.name,
         tokenDocURL: tokenProps.tokenDocURL,
-        tokenDocHash: tokenProps.tokenDocHash,
-        hash: null,
+        hash: tokenProps.tokenDocHash,
         decimals: parseInt(tokenProps.decimalPlaces),
         batonVout: null, // normally this is null (for fixed supply) or 2 for flexible
         initialQuantity: new BigNumber(0)
