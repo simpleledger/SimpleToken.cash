@@ -150,8 +150,8 @@ class App extends Component {
         {
           ticker: this.state.tokenProps.ticker,
           name: this.state.tokenProps.name,
-          tokenDocURL: this.state.tokenProps.tokenDocURL,
-          hash: null,
+          urlOrEmail: this.state.tokenProps.tokenDocURL,
+          hash: this.state.tokenProps.tokenDocHash,
           decimals: parseInt(this.state.tokenProps.decimalPlaces),
           batonVout: batonVout,
           initialQuantity: initialQuantity.times(10 ** parseInt(this.state.tokenProps.decimalPlaces))
