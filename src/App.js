@@ -94,21 +94,9 @@ class App extends Component {
   }
 
   defineDistribution = (tokenProps) => {
-    // Attempt to build genesis with initial properties
-    try {
-      slp.buildGenesisOpReturn({
-        ticker: tokenProps.ticker,
-        name: tokenProps.name,
-        tokenDocURL: tokenProps.tokenDocURL,
-        hash: tokenProps.tokenDocHash,
-        decimals: parseInt(tokenProps.decimalPlaces),
-        batonVout: null, // normally this is null (for fixed supply) or 2 for flexible
-        initialQuantity: new BigNumber(0)
-      });
-
-      var strTokenDocHash = tokenProps.tokenDocHash;
-      if (strTokenDocHash.length != 0)
-      {
+    var strTokenDocHash = tokenProps.tokenDocHash;
+    if (strTokenDocHash.length != 0)
+    {
         // check Token Document Hash should have 64 hex characters.
         if (strTokenDocHash.length != 64) {
             toast.error("Token Document Hash should have 64 hex characters.");
@@ -121,7 +109,19 @@ class App extends Component {
             toast.error("Token Document Hash should be hexademical characters.");
             return;
         }
-      }
+    }
+
+    // Attempt to build genesis with initial properties
+    try {
+      slp.buildGenesisOpReturn({
+        ticker: tokenProps.ticker,
+        name: tokenProps.name,
+        urlOrEmail: tokenProps.tokenDocURL,
+        hash: tokenProps.tokenDocHash,
+        decimals: parseInt(tokenProps.decimalPlaces),
+        batonVout: null, // normally this is null (for fixed supply) or 2 for flexible
+        initialQuantity: new BigNumber(0)
+      });
 
       this.setState({
         activeStep: this.nextStep(),
