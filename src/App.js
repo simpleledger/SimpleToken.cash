@@ -9,7 +9,7 @@ import Distribution from './Distribution'
 import Invoice from './Invoice'
 import Done from './Done'
 import CreateTokenStepper from './CreateTokenStepper'
-import Footer from './Footer'
+// import Footer from './Footer'
 import { ToastContainer, toast } from 'react-toastify'
 import 'react-toastify/dist/ReactToastify.css'
 import 'react-toastify/dist/ReactToastify.min.css'
@@ -95,10 +95,10 @@ class App extends Component {
 
   defineDistribution = (tokenProps) => {
     var strTokenDocHash = tokenProps.tokenDocHash;
-    if (strTokenDocHash.length != 0)
+    if (strTokenDocHash.length !== 0)
     {
         // check Token Document Hash should have 64 hex characters.
-        if (strTokenDocHash.length != 64) {
+        if (strTokenDocHash.length !== 64) {
             toast.error("Token Document Hash should have 64 hex characters.");
             return;
         }
@@ -118,7 +118,7 @@ class App extends Component {
         name: tokenProps.name,
         urlOrEmail: tokenProps.tokenDocURL,
         hash: tokenProps.tokenDocHash,
-        decimals: parseInt(tokenProps.decimalPlaces),
+        decimals: parseInt(tokenProps.decimalPlaces, 10),
         batonVout: null, // normally this is null (for fixed supply) or 2 for flexible
         initialQuantity: new BigNumber(0)
       });
@@ -142,7 +142,7 @@ class App extends Component {
       // Build Genesis OpReturn
       let batonVout = isFixedSupply ? null : 2
       let initialQuantity = addressQuantities.reduce((acc, cur) => (new BigNumber(cur.quantity)).plus(acc), new BigNumber(0));
-      let MAX_QTY = new BigNumber('18446744073709551615').dividedBy(10 ** parseInt(this.state.tokenProps.decimalPlaces));
+      let MAX_QTY = new BigNumber('18446744073709551615').dividedBy(10 ** parseInt(this.state.tokenProps.decimalPlaces, 10));
       if (initialQuantity.isGreaterThan(MAX_QTY)) {
         throw new Error("Maximum total send token quantity exceeded.  Reduce input quantity below " + MAX_QTY.toString());
       }
@@ -152,13 +152,13 @@ class App extends Component {
           name: this.state.tokenProps.name,
           urlOrEmail: this.state.tokenProps.tokenDocURL,
           hash: this.state.tokenProps.tokenDocHash,
-          decimals: parseInt(this.state.tokenProps.decimalPlaces),
+          decimals: parseInt(this.state.tokenProps.decimalPlaces, 10),
           batonVout: batonVout,
-          initialQuantity: initialQuantity.times(10 ** parseInt(this.state.tokenProps.decimalPlaces))
+          initialQuantity: initialQuantity.times(10 ** parseInt(this.state.tokenProps.decimalPlaces, 10))
         })
 
       // Build send OpReturn (check for protocol errors)
-      let outputQtyArray = addressQuantities.map((aq) => (new BigNumber(aq.quantity)).times(10 ** parseInt(this.state.tokenProps.decimalPlaces)));
+      let outputQtyArray = addressQuantities.map((aq) => (new BigNumber(aq.quantity)).times(10 ** parseInt(this.state.tokenProps.decimalPlaces, 10)));
       let sendOpReturn = slp.buildSendOpReturn({
         tokenIdHex: '0000000000000000000000000000000000000000000000000000000000000000',
         outputQtyArray: outputQtyArray,
@@ -226,6 +226,7 @@ class App extends Component {
 
         console.log("SEND Tx Size (bytes): " + (sendTxHex.length / 2).toString())
         let sendTxId = await network.sendTx(sendTxHex);
+        console.log('sendTxId : ', sendTxId);
 
         this.setState({
           activeStep: this.nextStep(),
@@ -300,6 +301,9 @@ class App extends Component {
           {...this.state.tokenProps} 
           tokenId={this.state.tokenId} 
         />
+        break;
+      default:
+        break;
     }
 
     return (

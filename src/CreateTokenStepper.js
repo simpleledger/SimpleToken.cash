@@ -16,9 +16,9 @@ let getSteps = () => {
 }
 
 class CreateTokenStepper extends Component {
-    constructor(props) {
-        super(props)
-    }
+    // constructor(props) {
+    //     super(props)
+    // }
 
     render() {
         const { classes } = this.props
