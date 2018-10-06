@@ -13,7 +13,8 @@ import 'react-toastify/dist/ReactToastify.css';
 import 'react-toastify/dist/ReactToastify.min.css';
 import LinearProgress from '@material-ui/core/LinearProgress';
 
-let bfp = require('bitcoinfilesjs').bfp;
+let bfp = require('bitcoinfiles').bfp;
+let network = require('bitcoinfiles').network;
 
 const classStyles = theme => ({
     modalText: {
@@ -70,8 +71,7 @@ class UploadDialog extends Component {
 
     // show dialog
     handleShow = () => {
-        this.uploadAddrInfo = bfp.getFileUploadPaymentAddress(this.props.masterHDNode);
-
+        this.uploadAddrInfo = bfp.getFileUploadPaymentInfoFromHdNode(this.props.masterHDNode);
         this.setState({
             estimatedCost: 0,
             cashAddress: this.uploadAddrInfo.address,
@@ -165,9 +165,9 @@ class UploadDialog extends Component {
                 fileName: this.state.fileName,
                 fileExt: this.state.fileExt,
                 fileSize: this.state.fileSize,
-                fileSha256: this.state.hash,
-                prevFileSha256: null,
-                fileUri: '',
+                fileSha256Hex: this.state.hash,
+                prevFileSha256Hex: null,
+                fileUri: null,
                 chunkData: null
             };
 
@@ -177,148 +177,54 @@ class UploadDialog extends Component {
                 configEmptyMetaOpReturn: configEmptyMetaOpReturn
             });
 
+            console.log(configEmptyMetaOpReturn)
             let estimatedCost = bfp.calculateFileUploadCost(objFile.size, configEmptyMetaOpReturn);
             this.setState({ estimatedCost: estimatedCost });
 
             // wait for payment
             console.log('waiting for payment... (', this.state.cashAddress, ')');
-            await bfp.monitorForPayment(this.state.cashAddress, estimatedCost, this.onPayment);
+            await network.monitorForPayment(this.state.cashAddress, estimatedCost, this.onPayment);
         } catch (e) {
             console.warn(e.message);
         }
+    }
+
+    signingProgress = (value) => {
+        this.setState({ completed: value });
+    }
+
+    signingComplete = () => {
+        this.setState({ signed: true });
+    }
+
+    uploadProgress = (value) => {
+        this.setState({ completed: value });
+    }
+
+    uploadCompleted = (bfTxId) => {
+        this.setState({
+            bfTxId: bfTxId,
+            uploaded: true
+        });
     }
 
     onPayment = async (utxo) => {
         this.setState({ paymentReceived: true });
         console.log('payment received. address : ', utxo.satoshis);
 
-        //* ** building transaction
-        let transactions = [];
-        let bChunkCountAdded = false;
-        // show progress
-        let nDiff = 100 / this.state.chunkCount;
-        let nCurPos = 0;
-
-        for (let nId = 0; nId < this.state.chunkCount; nId++) {
-            // build chunk data OpReturn
-            let chunkOpReturn = bfp.buildDataChunkOpReturn(this.state.chunks[nId]);
-
-            let txid = '';
-            let satoshis = 0;
-            let vout = 1;
-            if (nId === 0) {
-                txid = utxo.txid;
-                satoshis = utxo.satoshis;
-                vout = utxo.vout;
-            } else {
-                txid = transactions[nId - 1].getId();
-                satoshis = transactions[nId - 1].outs[1].value;
-            }
-
-            // build chunk data transaction
-            let configChunkTx = {
-                bfpChunkOpReturn: chunkOpReturn,
-                input_utxo: {
-                    address: this.state.cashAddress,
-                    txid: txid,
-                    vout: vout,
-                    satoshis: satoshis,
-                    wif: this.state.wif
-                }
-            };
-
-            let chunksTx = bfp.buildChunkTx(configChunkTx);
-
-            if (nId === this.state.chunkCount - 1) {
-                let emptyOpReturn = bfp.buildMetadataOpReturn(this.state.configEmptyMetaOpReturn);
-                let capacity = 223 - emptyOpReturn.length;
-                if (capacity >= this.state.chunks[nId].byteLength) {
-                    // finish with just a single metadata txn
-                    // build meta data OpReturn
-                    let configMetaOpReturn = {
-                        msgType: 1,
-                        chunkCount: this.state.chunkCount,
-                        fileName: this.state.fileName,
-                        fileExt: this.state.fileExt,
-                        fileSize: this.state.fileSize,
-                        fileSha256: this.state.hash,
-                        prevFileSha256: null,
-                        fileUri: '',
-                        chunkData: this.state.chunks[nId]
-                    };
-                    let metaOpReturn = bfp.buildMetadataOpReturn(configMetaOpReturn);
-
-                    // build meta data transaction
-                    let configMetaTx = {
-                        bfpMetadataOpReturn: metaOpReturn,
-                        input_utxo: {
-                            txid: txid,
-                            vout: vout,
-                            satoshis: satoshis,
-                            wif: this.state.wif
-                        },
-                        fileReceiverAddress: this.state.cashAddress
-                    };
-                    let metaTx = bfp.buildMetadataTx(configMetaTx);
-                    transactions.push(metaTx);
-                } else {
-                    // finish with both chunk txn and then final empty metadata txn
-                    transactions.push(chunksTx);
-
-                    let metaOpReturn = bfp.buildMetadataOpReturn(this.state.configEmptyMetaOpReturn);
-
-                    // build meta data transaction
-                    let configMetaTx = {
-                        bfpMetadataOpReturn: metaOpReturn,
-                        input_utxo: {
-                            txid: chunksTx.getId(),
-                            vout: vout,
-                            satoshis: chunksTx.outs[1].value,
-                            wif: this.state.wif
-                        },
-                        fileReceiverAddress: this.state.cashAddress
-                    };
-                    let metaTx = bfp.buildMetadataTx(configMetaTx);
-                    transactions.push(metaTx);
-
-                    bChunkCountAdded = true;
-                }
-            } else { // not last transaction
-                transactions.push(chunksTx);
-            }
-
-            // progress
-            this.setState({ completed: nCurPos });
-            nCurPos += nDiff;
-        }
-
-        // progress : signing finished
-        this.setState({ signed: true });
-
-        //* ** sending transaction
-        if (bChunkCountAdded) {
-            let chunkCount = this.state.chunkCount + 1;
-            this.setState({
-                chunkCount: chunkCount
-            });
-        }
-
-        nDiff = 100 / this.state.chunkCount;
-        nCurPos = 0;
-        this.setState({ completed: 0 });
-        for (let nId = 0; nId < this.state.chunkCount; nId++) {
-            console.log(transactions[nId].toHex());
-            var bfTxId = await bfp.sendTx(transactions[nId].toHex());
-            // progress
-            this.setState({ completed: nCurPos });
-            nCurPos += nDiff;
-        }
-
-        bfTxId = 'bitcoinfile:' + bfTxId;
-        this.setState({
-            bfTxId: bfTxId,
-            uploaded: true
-        });
+        let bfTxId = await bfp.uploadFile(utxo,       
+                                            this.state.cashAddress,      
+                                            this.state.wif,                
+                                            this.state.fileContents,  
+                                            this.state.fileName, 
+                                            this.state.fileExt, 
+                                            null,    
+                                            null,   
+                                            null, 
+                                            this.signingProgress, 
+                                            this.signingComplete, 
+                                            this.uploadProgress, 
+                                            this.uploadComplete)
 
         // set tokenDocURL, tokenDocHash
         this.props.onUploadFinished(bfTxId, this.state.hash);

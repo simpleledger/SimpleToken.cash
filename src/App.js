@@ -14,8 +14,8 @@ import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import 'react-toastify/dist/ReactToastify.min.css';
 
-let BITBOXCli = require('bitbox-cli/lib/bitbox-cli').default;
-let BITBOX = new BITBOXCli();
+//let BITBOXCli = require('bitbox-cli/lib/bitbox-cli').default;
+let BITBOX = require('bitcoinfiles').bitbox; //new BITBOXCli();
 
 let slp = require('slpjs').slp;
 let network = require('slpjs').bitbox;
@@ -38,6 +38,11 @@ class App extends Component {
         super(props);
 
         let mnemonic = BITBOX.Mnemonic.generate(256);
+        if (localStorage.getItem('recovery-stc') == null){
+            localStorage.setItem('recovery-stc', mnemonic);
+        } else {
+            mnemonic = localStorage.getItem('recovery-stc');
+        }
         let rootSeed = BITBOX.Mnemonic.toSeed(mnemonic);
         let masterHDNode = BITBOX.HDNode.fromSeed(rootSeed, 'bitcoincash');
         let hdNode = BITBOX.HDNode.derivePath(masterHDNode, "m/44'/145'/0'");
@@ -57,10 +62,10 @@ class App extends Component {
         };
 
         // Emergency recovery option
-        let recovery = JSON.parse(localStorage.getItem('recovery'));
-        if (recovery == null) recovery = [];
-        recovery.push(mnemonic);
-        localStorage.setItem('recovery', JSON.stringify(recovery));
+        // let recovery = JSON.parse(localStorage.getItem('recovery'));
+        // if (recovery == null) recovery = [];
+        // recovery.push(mnemonic);
+        // localStorage.setItem('recovery', JSON.stringify(recovery));
     }
 
     componentDidMount () {
