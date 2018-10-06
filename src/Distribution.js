@@ -1,85 +1,85 @@
-import React, { Component } from 'react'
-import PropTypes from 'prop-types'
-import { withStyles } from '@material-ui/core/styles'
-import Typography from '@material-ui/core/Typography'
-import TextField from '@material-ui/core/TextField'
-import FormControlLabel from '@material-ui/core/FormControlLabel'
-import Checkbox from '@material-ui/core/Checkbox'
-import Button from '@material-ui/core/Button'
+import React, { Component } from 'react';
+import PropTypes from 'prop-types';
+import { withStyles } from '@material-ui/core/styles';
+import Typography from '@material-ui/core/Typography';
+import TextField from '@material-ui/core/TextField';
+import FormControlLabel from '@material-ui/core/FormControlLabel';
+import Checkbox from '@material-ui/core/Checkbox';
+import Button from '@material-ui/core/Button';
 
 const classStyles = theme => ({
     root: {
         ...theme.mixins.gutters(),
         paddingTop: theme.spacing.unit * 2,
-        paddingBottom: theme.spacing.unit * 2,
+        paddingBottom: theme.spacing.unit * 2
     },
     button: {
-        margin: theme.spacing.unit,
-    },
+        margin: theme.spacing.unit
+    }
 });
 
 class Distribution extends Component {
-    constructor(props) {
-        super(props)
+    constructor (props) {
+        super(props);
 
         this.state = props.stepState ? props.stepState : {
             isFixedSupply: true,
             batonAddress: '',
             addressQuantities: [{
                 address: '',
-                quantity: '',
-            }],
-        }
+                quantity: ''
+            }]
+        };
     }
 
-    componentWillUnmount() {
-        this.props.saveStepState(this.state)
+    componentWillUnmount () {
+        this.props.saveStepState(this.state);
     }
 
     handleChange = name => event => {
         this.setState({
-            [name]: event.target.value,
-        })
+            [name]: event.target.value
+        });
     }
 
     handleDistributionChange = (index, name, newValue) => {
-        const aq = [...this.state.addressQuantities]
-        aq[index][name] = newValue
+        const aq = [...this.state.addressQuantities];
+        aq[index][name] = newValue;
         this.setState({
             addressQuantities: aq
-        })
+        });
     }
 
     handleCheckbox = name => event => {
         this.setState({
-            [name]: event.target.checked,
-        })
+            [name]: event.target.checked
+        });
     }
 
     addAddressQuantity = () => {
-        let addressQuantities = this.state.addressQuantities.slice()
+        let addressQuantities = this.state.addressQuantities.slice();
         addressQuantities.push({
             address: '',
-            quantity: 0,
-        })
+            quantity: 0
+        });
 
         this.setState({
             addressQuantities: addressQuantities
-        })
+        });
     }
 
     removeAddressQuantity = index => {
-        let addressQuantities = this.state.addressQuantities.slice()
-        if(index > -1) {
+        let addressQuantities = this.state.addressQuantities.slice();
+        if (index > -1) {
             addressQuantities.splice(index, 1);
             this.setState({
                 addressQuantities: addressQuantities
-            })
+            });
         }
     }
 
-    render() {
-        const { classes } = this.props
+    render () {
+        const { classes } = this.props;
 
         let addressQuantities = this.state.addressQuantities.map((aq, index) => {
             return <div key={[index, ...aq]}>
@@ -90,7 +90,7 @@ class Distribution extends Component {
                     type="number"
                     className={classes.textField}
                     InputLabelProps={{
-                        shrink: true,
+                        shrink: true
                     }}
                     margin="normal"
                 />
@@ -103,8 +103,8 @@ class Distribution extends Component {
                 />
                 { this.state.addressQuantities.length > 1 &&
                     <Button
-                        variant="contained" 
-                        color="secondary" 
+                        variant="contained"
+                        color="secondary"
                         className={classes.button}
                         onClick={ e => this.removeAddressQuantity(index) }
                     >
@@ -112,26 +112,26 @@ class Distribution extends Component {
                     </Button>
                 } <br />
             </div>;
-        })
+        });
 
         return (
             <div className={classes.root}>
-            <Typography variant="headline" component="h3">
+                <Typography variant="headline" component="h3">
                 Initial Distribution
-            </Typography>
-            <form noValidate autoComplete="off">
-                <FormControlLabel
-                    control={
-                        <Checkbox
-                            checked={this.state.isFixedSupply}
-                            onChange={this.handleCheckbox('isFixedSupply')}
-                            value="isFixedSupply"
-                            color="primary"
-                        />
-                    }
-                    label="Fixed Supply"
-                />
-                { !this.state.isFixedSupply && 
+                </Typography>
+                <form noValidate autoComplete="off">
+                    <FormControlLabel
+                        control={
+                            <Checkbox
+                                checked={this.state.isFixedSupply}
+                                onChange={this.handleCheckbox('isFixedSupply')}
+                                value="isFixedSupply"
+                                color="primary"
+                            />
+                        }
+                        label="Fixed Supply"
+                    />
+                    { !this.state.isFixedSupply &&
                 <span>
                     <TextField
                         id="batonAddress"
@@ -142,47 +142,47 @@ class Distribution extends Component {
                         onChange={this.handleChange('batonAddress')}
                     />
                 </span>
-                } <br />
-                {addressQuantities}
+                    } <br />
+                    {addressQuantities}
 
-                { this.state.addressQuantities.length < 19 &&
-                    <Button 
-                        variant="contained" 
-                        color="secondary" 
+                    { this.state.addressQuantities.length < 19 &&
+                    <Button
+                        variant="contained"
+                        color="secondary"
                         className={classes.button}
                         onClick={ this.addAddressQuantity }
                     >
                         +
                     </Button>
-                }  <br/> <br/>
-                <Button 
-                    variant="contained" 
-                    color="secondary" 
-                    className={classes.button}
-                    onClick={ () => this.props.toPreviousStep() }
-                >
+                    }  <br/> <br/>
+                    <Button
+                        variant="contained"
+                        color="secondary"
+                        className={classes.button}
+                        onClick={ () => this.props.toPreviousStep() }
+                    >
                     Back
-                </Button>
-                <Button 
-                    variant="contained" 
-                    color="primary" 
-                    className={classes.button}
-                    onClick={ () => this.props.reviewToken(
-                        this.state.isFixedSupply,
-                        this.state.batonAddress,
-                        this.state.addressQuantities
-                    ) }
-                >
+                    </Button>
+                    <Button
+                        variant="contained"
+                        color="primary"
+                        className={classes.button}
+                        onClick={ () => this.props.reviewToken(
+                            this.state.isFixedSupply,
+                            this.state.batonAddress,
+                            this.state.addressQuantities
+                        ) }
+                    >
                     Review
-                </Button>
-            </form>
+                    </Button>
+                </form>
             </div>
         );
     }
 }
 
 Distribution.propTypes = {
-  classes: PropTypes.object.isRequired,
-}
+    classes: PropTypes.object.isRequired
+};
 
 export default withStyles(classStyles)(Distribution);

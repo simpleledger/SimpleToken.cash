@@ -1,15 +1,11 @@
-import React, { Component } from 'react'
-import PropTypes from 'prop-types'
-import { withStyles } from '@material-ui/core/styles'
-import Typography from '@material-ui/core/Typography'
-import TextField from '@material-ui/core/TextField'
-import Button from '@material-ui/core/Button'
-import { FilePicker } from 'react-file-picker'
-import { ToastContainer, toast } from 'react-toastify'
-import 'react-toastify/dist/ReactToastify.css'
-import 'react-toastify/dist/ReactToastify.min.css'
-import CryptoJS from 'crypto-js'
-import MediaQuery from 'react-responsive'
+import React, { Component } from 'react';
+import PropTypes from 'prop-types';
+import { withStyles } from '@material-ui/core/styles';
+import Typography from '@material-ui/core/Typography';
+import TextField from '@material-ui/core/TextField';
+import Button from '@material-ui/core/Button';
+import MediaQuery from 'react-responsive';
+import UploadDialog from './UploadDialog';
 
 const classStyles = theme => ({
     root: {
@@ -29,15 +25,15 @@ const classStyles = theme => ({
         marginLeft: theme.spacing.unit,
         marginRight: theme.spacing.unit,
         marginBottom: 0,
-        width:240,
+        height: 36,
         backgroundColor: '#2196f3',
         '&:hover': {
             backgroundColor: '#0069d9',
-            borderColor: '#0062cc',
+            borderColor: '#0062cc'
         },
         '&:active': {
             backgroundColor: '#0062cc',
-            borderColor: '#005cbf',
+            borderColor: '#005cbf'
         }
     },
     buttonFileChooserMobile: {// button style for Calculate File Hash, Upload Token Document (Mobile)
@@ -48,13 +44,13 @@ const classStyles = theme => ({
     },
     container: {
         display: 'flex',
-        flexWrap: 'wrap',
+        flexWrap: 'wrap'
     }
 });
 
 class CreateTokenForm extends Component {
-    constructor(props) {
-        super(props)
+    constructor (props) {
+        super(props);
 
         // Restore previous state or initialize default values
         this.state = props.stepState ? props.stepState : {
@@ -62,123 +58,100 @@ class CreateTokenForm extends Component {
             ticker: '',
             tokenDocURL: '',
             tokenDocHash: '',
-            decimalPlaces: 0
-        }
+            decimalPlaces: 0,
+            modalOpened: false,
+            masterHDNode: this.props.masterHDNode
+        };
     }
 
-    componentWillUnmount() {
-        this.props.saveStepState(this.state)
+    componentWillUnmount () {
+        this.props.saveStepState(this.state);
     }
 
     handleChange = name => event => {
         this.setState({
-            [name]: event.target.value,
-        })
+            [name]: event.target.value
+        });
     }
 
-    // read selected file and calculate SHA256 hash,  show in TokenDocumentHash text field
-    handleFileHashChange = (objFile) => {
-        var objThis = this;
-        // read file
-        var fileReader = new FileReader();
-        fileReader.onload = function(e) {
-            var fileContents = e.target.result;
-            var fileWordArr = CryptoJS.lib.WordArray.create(fileContents);
-            var hashSha256 = CryptoJS.SHA256(fileWordArr);
-            var strHashSha256 = hashSha256.toString();
-
-            // show in TokenDocumentHash
-            objThis.setState({
-                tokenDocHash: strHashSha256
-            });
-        }
-        fileReader.readAsArrayBuffer(objFile);
+    // open modal dialog for payment and uploading file
+    handleOpenModal = () => {
+        this.setState({ modalOpened: true });
     }
 
-    // show error message when select file for TockenDocumentHash
-    handleFileHashError = (errMsg) => {
-        toast.error(errMsg)
-    }
+    // close modal dialog
+    handleCloseModal = () => {
+        this.setState({ modalOpened: false });
+    };
 
-    // upload file
-    handleFileUploadChange = (objFile) => {
-        console.log('upload file : ', objFile);
-    }
+    // upload finished
+    handleUploadFinished = (bfTxId, bfHash) => {
+        this.setState({
+            tokenDocURL: bfTxId,
+            tokenDocHash: bfHash
+        });
+    };
 
-    // show error message when select file for uploading
-    handleFileUploadError = (errMsg) => {
-        toast.error(errMsg)
-    }
-
-    render() {
-        const { classes } = this.props
+    render () {
+        const { classes } = this.props;
 
         return (
             <div className={classes.root}>
-            <Typography variant="headline" component="h3">
+                <Typography variant="headline" component="h3">
                 Token Properties
-            </Typography>
-            <form noValidate autoComplete="off">
-                <TextField
-                    id="name"
-                    label="Name"
-                    className={classes.textField}
-                    margin="normal"
-                    value={this.state.name}
-                    onChange={this.handleChange('name')}
-                /> <br />
-                <TextField
-                    id="ticker"
-                    label="Ticker"
-                    className={classes.textField}
-                    margin="normal"
-                    value={this.state.ticker}
-                    onChange={this.handleChange('ticker')}
-                /> <br />
-
-                <div className={classes.container}>
+                </Typography>
+                <form noValidate autoComplete="off">
                     <TextField
-                        id="tokenDocURL"
-                        label="Token Document URL"
+                        id="name"
+                        label="Name"
                         className={classes.textField}
                         margin="normal"
-                        value={this.state.tokenDocURL}
-                        onChange={this.handleChange('tokenDocURL')}
-                    />
+                        value={this.state.name}
+                        onChange={this.handleChange('name')}
+                    /> <br />
+                    <TextField
+                        id="ticker"
+                        label="Ticker"
+                        className={classes.textField}
+                        margin="normal"
+                        value={this.state.ticker}
+                        onChange={this.handleChange('ticker')}
+                    /> <br />
 
-                    {/* Upload Token Document : file chooser on Mobile */}
-                    <MediaQuery query='(max-device-width: 567px)'>
-                        <FilePicker
-                            onChange={FileObject => { this.handleFileUploadChange(FileObject) }}
-                            onError={errMsg => { this.handleFileUploadError(errMsg) }}
-                        >
+                    <div className={classes.container}>
+                        <TextField
+                            id="tokenDocURL"
+                            label="Token Document URL"
+                            className={classes.textField}
+                            margin="normal"
+                            value={this.state.tokenDocURL}
+                            onChange={this.handleChange('tokenDocURL')}
+                        />
+
+                        {/* Upload Token Document : file chooser on Mobile */}
+                        <MediaQuery query='(max-device-width: 564px)'>
                             <Button
                                 variant="contained"
                                 className={[classes.buttonFileChooser, classes.buttonFileChooserMobile].join(' ')}
+                                onClick={ () => this.handleOpenModal() }
                             >
                                 Upload Token Document...
                             </Button>
-                        </FilePicker>
-                    </MediaQuery>
+                        </MediaQuery>
 
-                    {/* Upload Token Document : file chooser on Desktop */}
-                    <MediaQuery query='(min-device-width: 568px)'>
-                        <FilePicker
-                            onChange={FileObject => { this.handleFileUploadChange(FileObject) }}
-                            onError={errMsg => { this.handleFileUploadError(errMsg) }}
-                        >
+                        {/* Upload Token Document : file chooser on Desktop */}
+                        <MediaQuery query='(min-device-width: 565px)'>
                             <Button
                                 variant="contained"
                                 className={[classes.buttonFileChooser, classes.buttonFileChooserDesktop].join(' ')}
+                                onClick={ () => this.handleOpenModal() }
                             >
                                 Upload Token Document...
                             </Button>
-                        </FilePicker>
-                    </MediaQuery>
-                </div>
-                <br />
+                        </MediaQuery>
+                    </div>
+                    <br />
 
-                <div className={classes.container}>
                     <TextField
                         id="tokenDocHash"
                         label="Token Document Hash"
@@ -188,75 +161,47 @@ class CreateTokenForm extends Component {
                         onChange={this.handleChange('tokenDocHash')}
                     />
 
-                    {/* Calculate File Hash : file chooser on Mobile */}
-                    <MediaQuery query='(max-device-width: 567px)'>
-                        <FilePicker
-                            onChange={FileObject => { this.handleFileHashChange(FileObject) }}
-                            onError={errMsg => { this.handleFileHashError(errMsg) }}
-                        >
-                            <Button
-                                variant="contained"
-                                className={[classes.buttonFileChooser, classes.buttonFileChooserMobile].join(' ')}
-                            >
-                                Calculate File Hash
-                            </Button>
-                        </FilePicker>
-                    </MediaQuery>
-
-                    {/* Calculate File Hash : file chooser on Desktop */}
-                    <MediaQuery query='(min-device-width: 568px)'>
-                        <FilePicker
-                            onChange={FileObject => { this.handleFileHashChange(FileObject) }}
-                            onError={errMsg => { this.handleFileHashError(errMsg) }}
-                        >
-                            <Button
-                                variant="contained"
-                                className={[classes.buttonFileChooser, classes.buttonFileChooserDesktop].join(' ')}
-                            >
-                                Calculate File Hash
-                            </Button>
-                        </FilePicker>
-                    </MediaQuery>
-
-                </div>
-                <br />
-                <TextField
-                    id="decimalPlaces"
-                    label="Decimal Places"
-                    className={classes.textField}
-                    margin="normal"
-                    value={this.state.decimalPlaces}
-                    onChange={this.handleChange('decimalPlaces')}
-                /> <br />
-                <Button 
-                    variant="contained" 
-                    color="secondary" 
-                    className={classes.button}
-                    onClick={ () => this.props.toPreviousStep() }
-                >
+                    <br />
+                    <TextField
+                        id="decimalPlaces"
+                        label="Decimal Places"
+                        className={classes.textField}
+                        margin="normal"
+                        value={this.state.decimalPlaces}
+                        onChange={this.handleChange('decimalPlaces')}
+                    /> <br />
+                    <Button
+                        variant="contained"
+                        color="secondary"
+                        className={classes.button}
+                        onClick={ () => this.props.toPreviousStep() }
+                    >
                     Back
-                </Button>
-                <Button 
-                    variant="contained" 
-                    color="primary" 
-                    className={classes.button}
-                    onClick={ () => this.props.defineDistribution(this.state) }
-                >
+                    </Button>
+                    <Button
+                        variant="contained"
+                        color="primary"
+                        className={classes.button}
+                        onClick={ () => this.props.defineDistribution(this.state) }
+                    >
                     Next
-                </Button>
-            </form>
+                    </Button>
+                </form>
 
-            <ToastContainer
-                autoClose={20 * 1000}
-            />
+                <UploadDialog
+                    isOpen={this.state.modalOpened}
+                    onClose={this.handleCloseModal}
+                    onUploadFinished={this.handleUploadFinished}
+                    masterHDNode={this.state.masterHDNode}
+                />
 
             </div>
         );
-  }
+    }
 }
 
 CreateTokenForm.propTypes = {
-  classes: PropTypes.object.isRequired,
-}
+    classes: PropTypes.object.isRequired
+};
 
 export default withStyles(classStyles)(CreateTokenForm);

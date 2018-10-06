@@ -1,36 +1,36 @@
-import React, { Component } from 'react'
-import PropTypes from 'prop-types'
-import { withStyles } from '@material-ui/core/styles'
-import AppBar from '@material-ui/core/AppBar'
-import Toolbar from '@material-ui/core/Toolbar'
-import Typography from '@material-ui/core/Typography'
+import React, { Component } from 'react';
+import PropTypes from 'prop-types';
+import { withStyles } from '@material-ui/core/styles';
+import AppBar from '@material-ui/core/AppBar';
+import Toolbar from '@material-ui/core/Toolbar';
+import Typography from '@material-ui/core/Typography';
 
 const classStyles = theme => ({
-  root: {
-    flexGrow: 1,
-  },
+    root: {
+        flexGrow: 1
+    }
 });
 
 class Header extends Component {
-  render() {
-    const { classes } = this.props
+    render () {
+        const { classes } = this.props;
 
-    return (
-      <div className={classes.root}>
-        <AppBar position="static" color="default">
-          <Toolbar>
-            <Typography variant="title" color="inherit">
+        return (
+            <div className={classes.root}>
+                <AppBar position="static" color="default">
+                    <Toolbar>
+                        <Typography variant="title" color="inherit">
               SimpleToken
-            </Typography> 
-          </Toolbar>
-        </AppBar>
-      </div>
-    );
-  }
+                        </Typography>
+                    </Toolbar>
+                </AppBar>
+            </div>
+        );
+    }
 }
 
 Header.propTypes = {
-  classes: PropTypes.object.isRequired,
-}
+    classes: PropTypes.object.isRequired
+};
 
 export default withStyles(classStyles)(Header);
