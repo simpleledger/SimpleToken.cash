@@ -196,30 +196,30 @@ class UploadDialog extends Component {
             bfTxId: bfTxId,
             uploaded: true
         });
-    }
-
-    onPayment = async (utxo) => {
-        this.setState({ paymentReceived: true });
-        console.log('payment received. address : ', utxo.satoshis);
-
-        let bfTxId = await bfp.uploadFile(utxo,       
-                                            this.state.cashAddress,      
-                                            this.state.wif,                
-                                            this.state.fileContents,
-                                            this.state.fileName, 
-                                            this.state.fileExt, 
-                                            null,    
-                                            null,   
-                                            null, 
-                                            this.signingProgress, 
-                                            this.signingComplete, 
-                                            this.uploadProgress, 
-                                            this.uploadComplete)
 
         // set tokenDocURL, tokenDocHash
         this.props.onUploadFinished(bfTxId, this.state.hash);
 
         console.log('uploading finished.');
+    }
+
+    onPayment = async (utxo) => {
+        this.setState({ paymentReceived: true });
+        console.log('payment received. amount(satoshi) : ', utxo.satoshis);
+
+        await bfp.uploadFile(utxo,
+                            this.state.cashAddress,
+                            this.state.wif,
+                            this.state.fileContents,
+                            this.state.fileName,
+                            this.state.fileExt,
+                            null,
+                            null,
+                            null,
+                            this.signingProgress,
+                            this.signingComplete,
+                            this.uploadProgress,
+                            this.uploadCompleted);
     }
 
     // show error message when select file for uploading
