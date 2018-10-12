@@ -113,8 +113,8 @@ class UploadDialog extends Component {
                 let fileSize = objFile.size;
 
                 let retFile = {
-                    contents: fileContents,
-                    hashSha256: strHashSha256,
+                    fileContents: fileContents,
+                    hash: strHashSha256,
                     fileName: fileName,
                     fileExt: fileExt,
                     fileSize: fileSize
@@ -132,8 +132,8 @@ class UploadDialog extends Component {
             const retFile = await this.readUploadedFile(objFile);
             // show in TokenDocumentHash
             this.setState({
-                hash: retFile.hashSha256,
-                fileContents: retFile.contents,
+                hash: retFile.hash,
+                fileContents: retFile.fileContents,
                 fileName: retFile.fileName,
                 fileExt: retFile.fileExt,
                 fileSize: retFile.fileSize,
@@ -215,7 +215,7 @@ class UploadDialog extends Component {
         let bfTxId = await bfp.uploadFile(utxo,       
                                             this.state.cashAddress,      
                                             this.state.wif,                
-                                            this.state.fileContents,  
+                                            this.state.fileContents,
                                             this.state.fileName, 
                                             this.state.fileExt, 
                                             null,    
