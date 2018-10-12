@@ -138,22 +138,13 @@ class UploadDialog extends Component {
                 fileExt: retFile.fileExt,
                 fileSize: retFile.fileSize,
                 chunkCount: null,
-                chunks: null,
                 configEmptyMetaOpReturn: null
             });
 
-            // chunks
-            let chunks = [];
+            // calculate chunk count
             let chunkCount = this.state.fileSize / 220;
             chunkCount = Math.floor(chunkCount);
-
-            for (let nId = 0; nId < chunkCount; nId++) {
-                chunks.push(this.state.fileContents.slice(nId * 220, (nId + 1) * 220));
-            }
-
-            // meta
             if (this.state.fileSize % 220) {
-                chunks[chunkCount] = this.state.fileContents.slice(chunkCount * 220, this.state.fileSize);
                 chunkCount++;
             }
 
@@ -173,7 +164,6 @@ class UploadDialog extends Component {
 
             this.setState({
                 chunkCount: chunkCount,
-                chunks: chunks,
                 configEmptyMetaOpReturn: configEmptyMetaOpReturn
             });
 
