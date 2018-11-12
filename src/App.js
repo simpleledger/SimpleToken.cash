@@ -38,11 +38,11 @@ class App extends Component {
         super(props);
 
         let mnemonic = BITBOX.Mnemonic.generate(256);
-        if (localStorage.getItem('recovery-stc') == null){
-            localStorage.setItem('recovery-stc', mnemonic);
-        } else {
-            mnemonic = localStorage.getItem('recovery-stc');
-        }
+        // if (localStorage.getItem('recovery-stc') == null){
+        //     localStorage.setItem('recovery-stc', mnemonic);
+        // } else {
+        //     mnemonic = localStorage.getItem('recovery-stc');
+        // }
         let rootSeed = BITBOX.Mnemonic.toSeed(mnemonic);
         let masterHDNode = BITBOX.HDNode.fromSeed(rootSeed, 'bitcoincash');
         let hdNode = BITBOX.HDNode.derivePath(masterHDNode, "m/44'/145'/0'");
